@@ -1,0 +1,30 @@
+---
+/** A loose sheet of aged paper (contents, profile, glossary...). */
+interface Props {
+	width?: 'normal' | 'wide';
+	class?: string;
+	/** view-transition-name, to morph this sheet from/to an element on another page. */
+	transitionName?: string;
+}
+const { width = 'normal', class: className, transitionName } = Astro.props;
+---
+
+<article
+	data-sheet
+	class:list={['sheet', 'paper', `sheet-${width}`, className]}
+	style={transitionName ? `view-transition-name: ${transitionName}` : undefined}
+>
+	<slot />
+</article>
+
+<style>
+	.sheet {
+		max-width: 48rem;
+		margin: 0 auto;
+		padding: clamp(2.6rem, 7vw, 4.5rem) clamp(1.6rem, 7vw, 4.5rem) clamp(3rem, 7vw, 4.5rem);
+	}
+
+	.sheet-wide {
+		max-width: 62rem;
+	}
+</style>

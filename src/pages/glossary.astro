@@ -1,0 +1,124 @@
+---
+import { render } from 'astro:content';
+import BookLayout from '../layouts/BookLayout.astro';
+import Sheet from '../components/Sheet.astro';
+import Ornament from '../components/Ornament.astro';
+import { pasted } from '../components/pasted';
+import { published } from '../lib/book';
+
+const entries = (await published('glossary')).sort((a, b) =>
+	a.data.term.localeCompare(b.data.term, 'en', { sensitivity: 'base' }),
+);
+
+// Group by first letter (accents stripped)
+const groups = new Map<string, typeof entries>();
+for (const e of entries) {
+	const letter = e.data.term.normalize('NFD').charAt(0).toUpperCase();
+	groups.set(letter, [...(groups.get(letter) ?? []), e]);
+}
+
+const rendered = await Promise.all(
+	[...groups].map(async ([letter, list]) => ({
+		letter,
+		list: await Promise.all(list.map(async (e) => ({ e, Content: (await render(e)).Content }))),
+	})),
+);
+---
+
+<BookLayout title="Glossary">
+	<Sheet>
+		<p class="kicker">Places, names and things</p>
+		<h1 class="page-title">Glossary</h1>
+		<Ornament />
+
+		<nav class="letters" aria-label="Letters">
+			{rendered.map((g) => <a href={`#letter-${g.letter}`}>{g.letter}</a>)}
+		</nav>
+
+		{
+			rendered.map((g) => (
+				<section id={`letter-${g.letter}`}>
+					<h2 class="letter">{g.letter}</h2>
+					<dl>
+						{g.list.map(({ e, Content }) => (
+							<div class="entry" id={e.id}>
+								<dt>
+									<span class="term">{e.data.term}</span>
+									<span class="kind">{e.data.kind}</span>
+								</dt>
+								<dd class="prose">
+									<Content components={pasted} />
+								</dd>
+							</div>
+						))}
+					</dl>
+				</section>
+			))
+		}
+	</Sheet>
+</BookLayout>
+
+<style>
+	.letters {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0.3rem 0.9rem;
+		font-family: var(--f-title);
+		font-size: 1.1rem;
+		margin-bottom: 1.5rem;
+	}
+
+	.letters a {
+		text-decoration: none;
+	}
+
+	.letter {
+		font-family: var(--f-title);
+		font-size: 2.2rem;
+		color: var(--rubric);
+		margin: 1.8rem 0 0.4rem;
+		padding-bottom: 0.2rem;
+		border-bottom: 1px solid color-mix(in srgb, var(--gold) 50%, transparent);
+	}
+
+	dl {
+		margin: 0;
+	}
+
+	.entry {
+		padding: 0.9rem 0;
+	}
+
+	.entry + .entry {
+		border-top: 1px dashed color-mix(in srgb, var(--ink) 18%, transparent);
+	}
+
+	.entry:target {
+		background: color-mix(in srgb, var(--gold) 12%, transparent);
+	}
+
+	dt {
+		display: flex;
+		align-items: baseline;
+		gap: 0.7rem;
+		margin-bottom: 0.3rem;
+	}
+
+	.term {
+		font-family: var(--f-smallcaps);
+		font-size: 1.2rem;
+		letter-spacing: 0.03em;
+	}
+
+	.kind {
+		font-style: italic;
+		font-size: 0.9rem;
+		color: var(--ink-faded);
+	}
+
+	dd {
+		margin: 0;
+		font-size: 1.05rem;
+	}
+</style>

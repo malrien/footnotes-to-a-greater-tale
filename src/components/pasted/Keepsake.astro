@@ -1,0 +1,25 @@
+---
+import { styleVars, assetUrl, tiltFrom, type Position } from './util';
+
+interface Props {
+	/** Ideally a PNG/SVG with a transparent background (flower, feather, ticket...). */
+	src: string;
+	caption?: string;
+	alt?: string;
+	tape?: boolean;
+	tilt?: number;
+	position?: Position;
+	width?: string | number;
+}
+
+const { src, caption, alt, tape = false, position = 'left', width = 30 } = Astro.props;
+const tilt = Astro.props.tilt ?? tiltFrom(src, 12);
+---
+
+<figure
+	class:list={['pasted', 'keepsake', `pos-${position}`, { 'tape-top': tape }]}
+	style={styleVars(tilt, width)}
+>
+	<img src={assetUrl(src)} alt={alt ?? caption ?? ''} loading="lazy" decoding="async" />
+	{caption && <figcaption class="hand-caption">{caption}</figcaption>}
+</figure>

@@ -1,0 +1,39 @@
+---
+import { render } from 'astro:content';
+import BookLayout from '../../layouts/BookLayout.astro';
+import Book from '../../components/Book.astro';
+import ReadingToggle from '../../components/ReadingToggle.astro';
+import ChapterNav from '../../components/ChapterNav.astro';
+import Ornament from '../../components/Ornament.astro';
+import { pasted } from '../../components/pasted';
+import { sortedChapters, chapterLabel, initialOf } from '../../lib/book';
+
+export async function getStaticPaths() {
+	const chapters = await sortedChapters();
+	return chapters.map((chapter, i) => ({
+		params: { slug: chapter.id },
+		props: { chapter, prev: chapters[i - 1], next: chapters[i + 1] },
+	}));
+}
+
+const { chapter, prev, next } = Astro.props;
+const { title, number, location, world_date, summary, draft } = chapter.data;
+const { Content } = await render(chapter);
+const byline = [location, world_date].filter(Boolean).join(' · ');
+---
+
+<BookLayout title={title} description={summary}>
+	<div class="reading-bar"><ReadingToggle /></div>
+
+	<Book draft={draft} initial={initialOf(chapter.body)}>
+		<header class="chapter-head" slot="head">
+			<p class="kicker">{chapterLabel(number)}</p>
+			<h1 class="page-title">{title}</h1>
+			{byline && <p class="subtitle">{byline}</p>}
+			<Ornament />
+		</header>
+		<Content components={pasted} />
+	</Book>
+
+	<ChapterNav prev={prev} next={next} />
+</BookLayout>

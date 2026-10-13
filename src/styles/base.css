@@ -1,0 +1,164 @@
+/* ——— Palette ———————————————————————————————————————————————
+   Light = daylight on aged paper. Dark = "by candlelight". */
+:root {
+	--desk: #2a1a10;
+	--desk-2: #1b100a;
+	--paper: #eedfbf;
+	--paper-2: #e3cfa3;
+	--paper-burn: rgba(118, 66, 18, 0.42);
+	--ink: #3a2717;
+	--ink-soft: #6a5038;
+	--ink-faded: #8d7458;
+	--rubric: #7d2119;
+	--gold: #a57a2c;
+	--gold-light: #d9b563;
+	--leather: #4a2a19;
+	--leather-2: #2f190e;
+	--tape: rgba(211, 180, 106, 0.6); /* same tone the old multiply gave over the paper */
+	--shadow: rgba(20, 10, 2, 0.45);
+	--candle-glow: rgba(255, 190, 110, 0);
+
+	/* The --font-* variables come from Astro's self-hosted fonts (BookLayout),
+	   and each already includes a size-matched fallback. */
+	--f-body: var(--font-fell);
+	--f-smallcaps: var(--font-fell-sc);
+	--f-title: var(--font-cinzel-decorative);
+	--f-hand: var(--font-hand);
+	--f-signature: var(--font-signature);
+
+	color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme='light']) {
+		--desk: #120b07;
+		--desk-2: #070403;
+		--paper: #33271b;
+		--paper-2: #2a2016;
+		--paper-burn: rgba(0, 0, 0, 0.55);
+		--ink: #ead7b1;
+		--ink-soft: #c9b08a;
+		--ink-faded: #9c8566;
+		--rubric: #d9775c;
+		--gold: #d6a751;
+		--gold-light: #f0cf83;
+		--leather: #3a2014;
+		--leather-2: #1d0f08;
+		--tape: rgba(200, 180, 130, 0.45);
+		--shadow: rgba(0, 0, 0, 0.7);
+		--candle-glow: rgba(255, 170, 80, 0.13);
+		color-scheme: dark;
+	}
+}
+
+:root[data-theme='dark'] {
+	--desk: #120b07;
+	--desk-2: #070403;
+	--paper: #33271b;
+	--paper-2: #2a2016;
+	--paper-burn: rgba(0, 0, 0, 0.55);
+	--ink: #ead7b1;
+	--ink-soft: #c9b08a;
+	--ink-faded: #9c8566;
+	--rubric: #d9775c;
+	--gold: #d6a751;
+	--gold-light: #f0cf83;
+	--leather: #3a2014;
+	--leather-2: #1d0f08;
+	--tape: rgba(200, 180, 130, 0.45);
+	--shadow: rgba(0, 0, 0, 0.7);
+	--candle-glow: rgba(255, 170, 80, 0.13);
+	color-scheme: dark;
+}
+
+/* ——— Page transitions ——————————————————————————————————————
+   Cross-fade between pages (Chrome, Edge, Safari 18.2+; other
+   browsers simply navigate). Blends the cover's zoom into /contents. */
+@view-transition {
+	navigation: auto;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation-duration: 0.5s;
+}
+
+/* The page in the book on the cover grows into the contents sheet, and
+   any page's sheet shrinks back into the book when returning to the cover */
+::view-transition-group(book-page) {
+	animation-duration: 0.9s;
+	animation-timing-function: cubic-bezier(0.3, 0.1, 0.2, 1);
+}
+
+/* Sheets of other shapes are cropped to the page instead of spilling out */
+::view-transition-old(book-page),
+::view-transition-new(book-page) {
+	animation-duration: 0.9s;
+	height: 100%;
+	object-fit: cover;
+	object-position: top;
+}
+
+/* ——— Base ——————————————————————————————————————————————— */
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	-webkit-text-size-adjust: 100%;
+}
+
+body {
+	margin: 0;
+	min-height: 100vh;
+	font-family: var(--f-body);
+	color: var(--ink);
+	background-color: var(--desk);
+	background-image:
+		radial-gradient(ellipse at 20% 0%, var(--candle-glow), transparent 60%),
+		url('../assets/textures/leather.svg'),
+		radial-gradient(ellipse at center, var(--desk), var(--desk-2));
+	background-size: 100% 100vh, 400px 400px, 100% 100%;
+	background-repeat: no-repeat, repeat, no-repeat;
+	overflow-x: hidden;
+}
+
+img {
+	max-width: 100%;
+	height: auto;
+}
+
+a {
+	color: var(--rubric);
+	text-decoration-color: color-mix(in srgb, var(--rubric) 45%, transparent);
+	text-underline-offset: 0.18em;
+}
+
+a:hover {
+	text-decoration-color: currentColor;
+}
+
+:focus-visible {
+	outline: 2px dashed var(--gold);
+	outline-offset: 3px;
+}
+
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		transition-duration: 0.01ms !important;
+	}
+}

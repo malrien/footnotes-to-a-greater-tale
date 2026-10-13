@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 280">
+  <defs>
+    <linearGradient id="ceu" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#8fa6b8"/>
+      <stop offset="0.7" stop-color="#d9d4c4"/>
+    </linearGradient>
+    <linearGradient id="neve" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4f1ea"/>
+      <stop offset="1" stop-color="#b9c1c6"/>
+    </linearGradient>
+    <filter id="pintura">
+      <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" seed="4"/>
+      <feDisplacementMap in="SourceGraphic" scale="6"/>
+    </filter>
+  </defs>
+  <rect width="400" height="280" fill="url(#ceu)"/>
+  <circle cx="310" cy="70" r="26" fill="#f1e8d0" opacity="0.8"/>
+  <g filter="url(#pintura)">
+    <path d="M0 190 L70 90 L110 140 L170 50 L240 150 L290 100 L400 200 V280 H0Z" fill="#6f7f8c"/>
+    <path d="M70 90 L88 116 L78 118 L66 132 L58 108Z M170 50 L200 94 L184 90 L170 110 L156 88 L144 92Z M290 100 L316 130 L300 128 L288 140 L276 118Z" fill="url(#neve)"/>
+    <path d="M0 220 L60 170 L120 205 L190 150 L260 200 L330 165 L400 215 V280 H0Z" fill="#9aa7ae"/>
+    <path d="M0 250 Q100 225 200 245 T400 240 V280 H0Z" fill="#e9e6de"/>
+  </g>
+  <g fill="#2f3b33">
+    <path d="M40 250 l10 -40 l10 40z M58 252 l8 -30 l8 30z M330 246 l12 -46 l12 46z M352 250 l8 -28 l8 28z M300 252 l7 -24 l7 24z"/>
+  </g>
+</svg>

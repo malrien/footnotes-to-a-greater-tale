@@ -1,0 +1,8 @@
+---
+interface Props {
+	side?: 'left' | 'right';
+}
+const { side = 'right' } = Astro.props;
+---
+
+<aside class:list={['margin-note', `side-${side}`]}><slot /></aside>

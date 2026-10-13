@@ -1,0 +1,54 @@
+---
+title: "Scratch Page: Pasted Objects"
+number: 99
+summary: "Never published. A catalogue of every pasted object, to copy from."
+draft: true
+---
+
+{/*
+  This page is a DRAFT on purpose, so it never goes to the published site.
+  It only exists so you can see every pasted object and copy the code.
+  The pictures are placeholders from /images/examples/.
+*/}
+
+This page never leaves your computer (it has `draft: true`). Use it to see how each pasted object looks and to copy the code into real chapters. Try it in both Scroll and Book mode.
+
+<Photo src="/images/examples/mountains.svg" caption="Photo · tape at the corners (default)" />
+
+A **Photo** floats to the right by default and the text wraps around it. Screenshots from the game work great here. Shrink them to about 1200px wide first, so the page loads quickly. The tape, the slight tilt and the faded print are all automatic; you only choose where it goes and what the caption says.
+
+<Photo src="/images/examples/portrait.svg" caption="Photo · album corners, on the left" tape="album" position="left" width={34} />
+
+With `tape="album"` the photo is held by little album corners instead of tape, and `position="left"` puts it on the other side. You can also use `tape="top"` for a single strip, or `tape="none"`.
+
+<MarginNote>A MarginNote sits in the side margin on wide screens, and beside the text on phones and in Book mode.</MarginNote>
+
+Margin notes are handy for asides, second thoughts and corrections, the kind of remark one scribbles beside a paragraph when re-reading it later.
+
+<Note tilt={-5}>
+  A Note is a scrap of lined paper taped onto the page. Use color="yellow" or color="blue" for other papers.
+</Note>
+
+Notes are for reminders, things copied down in haste, or anything that feels written on a different day than the page itself.
+
+<Sketch src="/images/examples/tower.svg" caption="Sketch · the white disappears and the lines become ink" />
+
+A **Sketch** takes a drawing on a white background and turns it into ink on the page. It works best with line art: pencil drawings, maps, diagrams.
+
+<Keepsake src="/images/examples/flower.svg" caption="Keepsake · a transparent PNG" width={26} tape />
+
+A **Keepsake** is a cut-out object with a shadow: a pressed flower, a feather, a ticket, a coin. Use a PNG with a transparent background. With `tape` it gets a strip holding it down.
+
+<Stain kind="ink" side="left" size={70} />
+
+Stains are purely decorative: `kind="ink"`, `kind="coffee"` or `kind="burn"`. Use them sparingly, one or two per chapter at most.
+
+<Letter to="To whom it may concern" from="The Sender" date="A place, a date" seal="M">
+  A Letter is a folded sheet with a signature and, optionally, a wax seal with one or two letters on it.
+
+  It can hold several paragraphs.
+</Letter>
+
+<Stain kind="coffee" side="right" rotate={20} />
+
+That is every object. The full list of options is in the README.

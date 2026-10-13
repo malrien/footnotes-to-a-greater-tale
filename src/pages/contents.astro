@@ -1,0 +1,12 @@
+---
+import BookLayout from '../layouts/BookLayout.astro';
+import Sheet from '../components/Sheet.astro';
+import ContentsBody from '../components/ContentsBody.astro';
+---
+
+<BookLayout title="Contents">
+	<!-- Same transition name as the first page under the cover: the opening animation morphs one into the other -->
+	<Sheet class="page-proportions" transitionName="book-page">
+		<ContentsBody />
+	</Sheet>
+</BookLayout>

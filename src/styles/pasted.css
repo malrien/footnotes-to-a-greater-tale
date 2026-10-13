@@ -1,0 +1,407 @@
+/* ——— Things pasted into the book ——————————————————————————
+   Photos, notes, letters, sketches... All accept --tilt and a
+   position: left, right or center. */
+.pasted {
+	--tilt: 0deg;
+	--width: 46%;
+	position: relative;
+	margin: 1.2em 0;
+	break-inside: avoid;
+	page-break-inside: avoid;
+	transform: rotate(var(--tilt));
+	z-index: 1;
+}
+
+.pasted.pos-left {
+	float: left;
+	width: var(--width);
+	margin: 0.3em 1.4em 0.8em -0.4em;
+}
+
+.pasted.pos-right {
+	float: right;
+	width: var(--width);
+	margin: 0.3em -0.4em 0.8em 1.4em;
+}
+
+.pasted.pos-center {
+	width: min(var(--width), 100%);
+	margin-inline: auto;
+	clear: both;
+}
+
+.pasted img {
+	display: block;
+	width: 100%;
+	margin: 0;
+}
+
+.hand-caption {
+	font-family: var(--f-hand);
+	font-size: 0.78em;
+	line-height: 1.5;
+	color: var(--ink-soft);
+	text-align: center;
+	margin-top: 0.5em;
+	text-indent: 0;
+}
+
+/* ——— Aged sticky tape ————————————————————————————————————— */
+.tape::before,
+.tape::after,
+.tape-top::before {
+	content: '';
+	position: absolute;
+	width: 5.5em;
+	height: 1.6em;
+	background:
+		linear-gradient(90deg, rgba(255, 255, 255, 0.18), transparent 30%, transparent 70%, rgba(255, 255, 255, 0.12)),
+		var(--tape);
+	box-shadow: 0 1px 2px rgba(60, 40, 10, 0.25);
+	clip-path: polygon(3% 0, 97% 4%, 100% 20%, 96% 42%, 99% 64%, 95% 100%, 4% 96%, 0 78%, 3% 55%, 0 30%);
+	z-index: 2;
+	/* No mix-blend-mode on purpose: inside transformed/turning layers it
+	   renders differently, so the tape would change tone mid page-turn.
+	   The --tape colour already reads as aged tape over the paper. */
+}
+
+.tape::before {
+	top: -0.6em;
+	left: -1.6em;
+	transform: rotate(-38deg);
+}
+
+.tape::after {
+	top: -0.6em;
+	right: -1.6em;
+	transform: rotate(36deg);
+}
+
+.tape-top::before {
+	top: -0.8em;
+	left: 50%;
+	transform: translateX(-50%) rotate(-3deg);
+}
+
+/* Tape must stay inside the object's box; otherwise, in book mode, it
+   "leaks" onto the previous page when the object moves to the next one. */
+.pasted.photo,
+.pasted.tape-top {
+	padding-top: 0.9em;
+}
+
+.pasted.tape-top::before {
+	top: 0.1em;
+}
+
+/* ——— Photo ————————————————————————————————————————————————— */
+.photo-frame {
+	position: relative;
+	padding: 0.55em 0.55em 0.7em;
+	background: #f4ecd9;
+	background-image: url('../assets/textures/paper-grain.svg');
+	box-shadow:
+		0 1px 1px rgba(0, 0, 0, 0.15),
+		0 6px 14px rgba(40, 20, 5, 0.35);
+}
+
+.photo-frame img {
+	filter: sepia(0.35) contrast(1.02) saturate(0.85);
+}
+
+.photo-frame::after {
+	/* slight fading and vignette on the print */
+	content: '';
+	position: absolute;
+	inset: 0.55em 0.55em 0.7em;
+	background: radial-gradient(ellipse at center, transparent 55%, rgba(70, 40, 10, 0.35));
+	pointer-events: none;
+}
+
+.photo.style-album .photo-frame {
+	padding: 0;
+	background: none;
+}
+
+.photo.style-album .photo-frame::after {
+	inset: 0;
+}
+
+.corner {
+	position: absolute;
+	width: 1.6em;
+	height: 1.6em;
+	background: linear-gradient(135deg, #2b1a10 50%, transparent 50%);
+	z-index: 2;
+	filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.4));
+}
+
+.corner.c1 { top: -0.35em; left: -0.35em; }
+.corner.c2 { top: -0.35em; right: -0.35em; transform: rotate(90deg); }
+.corner.c3 { bottom: -0.35em; right: -0.35em; transform: rotate(180deg); }
+.corner.c4 { bottom: -0.35em; left: -0.35em; transform: rotate(270deg); }
+
+.photo figcaption {
+	font-family: var(--f-hand);
+	font-size: 0.75em;
+	color: #5a4430;
+	text-align: center;
+	padding-top: 0.4em;
+}
+
+.photo.style-album figcaption {
+	color: var(--ink-soft);
+}
+
+/* ——— Note ———————————————————————————————————————————————— */
+.note {
+	--width: 42%;
+}
+
+.note-paper {
+	position: relative;
+	padding: 1.1em 1.1em 1.4em;
+	font-family: var(--f-hand);
+	font-size: 0.82em;
+	line-height: 1.75;
+	color: #3b2a1a;
+	background-color: var(--note-color, #f1e6c8);
+	background-image:
+		url('../assets/textures/paper-grain.svg'),
+		repeating-linear-gradient(transparent 0 1.72em, rgba(90, 110, 140, 0.18) 1.72em calc(1.72em + 1px));
+	background-position: 0 0, 0 0.9em;
+	clip-path: polygon(0 1%, 18% 0, 42% 1.5%, 70% 0, 100% 1%, 99% 30%, 100% 62%, 99% 96%, 91% 100%, 83% 96%, 74% 100%, 63% 95%, 52% 99%, 40% 95%, 28% 100%, 17% 96%, 8% 99%, 0 95%, 1% 60%);
+}
+
+.note-paper p {
+	margin: 0 0 0.4em;
+	text-align: left;
+	text-indent: 0 !important;
+}
+
+.note-paper p:last-child {
+	margin-bottom: 0;
+}
+
+.note.color-cream { --note-color: #f1e6c8; }
+.note.color-yellow { --note-color: #eedc9f; }
+.note.color-blue { --note-color: #d9dccf; }
+
+/* drop-shadow can't pass through clip-path, so it goes on a wrapper */
+.note-shadow {
+	filter: drop-shadow(0 5px 7px rgba(30, 15, 5, 0.4));
+}
+
+/* ——— Letter ——————————————————————————————————————————————— */
+.letter {
+	--width: 88%;
+}
+
+.letter-paper {
+	position: relative;
+	padding: 2em 2.2em 2.4em;
+	color: #3a2717;
+	background-color: #efe3c6;
+	background-image:
+		linear-gradient(180deg, transparent 32.8%, rgba(80, 50, 20, 0.14) 33.3%, rgba(255, 255, 255, 0.25) 33.8%, transparent 35%),
+		linear-gradient(180deg, transparent 65.8%, rgba(80, 50, 20, 0.14) 66.3%, rgba(255, 255, 255, 0.25) 66.8%, transparent 68%),
+		url('../assets/textures/paper-grain.svg'),
+		radial-gradient(ellipse at center, transparent 60%, rgba(110, 70, 20, 0.28));
+	box-shadow:
+		0 1px 1px rgba(0, 0, 0, 0.2),
+		0 10px 22px rgba(40, 20, 5, 0.4);
+	font-style: italic;
+	font-size: 0.97em;
+}
+
+.letter-paper p {
+	text-indent: 0 !important;
+	margin: 0 0 0.7em;
+}
+
+.letter-date {
+	text-align: right;
+	font-size: 0.9em;
+	color: #6a5038;
+}
+
+.letter-to {
+	font-style: normal;
+	font-family: var(--f-smallcaps);
+}
+
+.letter-signature {
+	font-family: var(--f-signature);
+	font-style: normal;
+	font-size: 1.9em;
+	text-align: right;
+	margin: 0.4em 1em 0 0 !important;
+	line-height: 1.1;
+}
+
+.seal {
+	position: absolute;
+	right: 1em;
+	bottom: -0.95em;
+	width: 2.5em;
+	height: 2.5em;
+	display: grid;
+	place-items: center;
+	font-family: var(--f-title);
+	font-style: normal;
+	font-weight: 700;
+	font-size: 1.35em;
+	line-height: 1;
+	color: rgba(60, 0, 0, 0.6);
+	text-shadow: 0 1px 0 rgba(255, 150, 130, 0.35);
+	background:
+		radial-gradient(circle at 38% 32%, rgba(255, 140, 120, 0.55), transparent 42%),
+		radial-gradient(circle at center, #8f1d17 52%, #6d110d 64%, transparent 66%);
+	border-radius: 46% 54% 50% 50% / 52% 46% 54% 48%;
+	box-shadow: 0 3px 6px rgba(40, 0, 0, 0.45);
+	transform: rotate(-12deg);
+}
+
+.seal::before {
+	content: '';
+	position: absolute;
+	inset: 0.33em;
+	border: 1.5px solid rgba(60, 0, 0, 0.35);
+	border-radius: 50%;
+}
+
+/* ——— Sketch ——————————————————————————————————————————————— */
+/* The filter (defined in BookLayout) turns white transparent and the
+   lines into ink, so the drawing looks made on the page itself. */
+.sketch img {
+	filter: contrast(1.25) brightness(1.05) url(#sketch-ink);
+	opacity: 0.88;
+}
+
+/* Drawings made on tinted paper or parchment (paper="tinted"): a stronger
+   filter so their own paper disappears too, and faded edges so what is left
+   of the original sheet's rectangle melts into the page. Kept separate
+   because on white-paper drawings it washes out the softer shading. */
+.sketch.paper-tinted img {
+	filter: contrast(1.6) brightness(1.3) url(#sketch-ink);
+	mask-image:
+		linear-gradient(to right, transparent, #000 5%, #000 95%, transparent),
+		linear-gradient(to bottom, transparent, #000 5%, #000 95%, transparent);
+	mask-composite: intersect;
+}
+
+/* By candlelight, light ink on the dark paper would invert the drawing
+   (the white mask turns dark, the black hair turns pale). Instead the
+   sketch sits on a sheet of lighter paper pasted onto the page, and keeps
+   its dark lines exactly as drawn. */
+:root[data-theme='dark'] .sketch {
+	padding: 0.9em 0.9em 0.7em;
+	background-color: #e7d9b6;
+	background-image:
+		url('../assets/textures/paper-grain.svg'),
+		radial-gradient(ellipse at center, transparent 55%, rgba(110, 70, 20, 0.3));
+	box-shadow:
+		0 1px 1px rgba(0, 0, 0, 0.3),
+		0 8px 18px rgba(0, 0, 0, 0.5);
+}
+
+:root[data-theme='dark'] .sketch .hand-caption {
+	color: #5a4430;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root:not([data-theme='light']) .sketch {
+		padding: 0.9em 0.9em 0.7em;
+		background-color: #e7d9b6;
+		background-image:
+			url('../assets/textures/paper-grain.svg'),
+			radial-gradient(ellipse at center, transparent 55%, rgba(110, 70, 20, 0.3));
+		box-shadow:
+			0 1px 1px rgba(0, 0, 0, 0.3),
+			0 8px 18px rgba(0, 0, 0, 0.5);
+	}
+
+	:root:not([data-theme='light']) .sketch .hand-caption {
+		color: #5a4430;
+	}
+}
+
+/* ——— Keepsake (cut-out object) ——————————————————————————— */
+.keepsake img {
+	filter: drop-shadow(2px 5px 5px rgba(30, 15, 5, 0.45)) sepia(0.2);
+}
+
+/* ——— Margin note —————————————————————————————————————————— */
+/* Hangs halfway into the paper's side margin; the page padding is ~5rem
+   on wide screens, so it must never hang out further than that. */
+.margin-note {
+	float: right;
+	clear: right;
+	width: 10rem;
+	margin: 0.2em -3.5rem 0.6em 1.2rem;
+	font-family: var(--f-hand);
+	font-size: 0.72em;
+	line-height: 1.6;
+	color: var(--rubric);
+	transform: rotate(-2deg);
+	text-indent: 0;
+}
+
+.margin-note.side-left {
+	float: left;
+	clear: left;
+	margin: 0.2em 1.2rem 0.6em -3.5rem;
+	transform: rotate(2deg);
+}
+
+.margin-note::before {
+	content: '☞ ';
+	font-family: var(--f-body);
+}
+
+/* No side margin (phones and book mode): sits beside the text */
+@media (max-width: 1100px) {
+	.margin-note,
+	.margin-note.side-left {
+		width: 40%;
+		margin: 0.3em 0 0.6em 1rem;
+		float: right;
+		padding-left: 0.7em;
+		border-left: 1px solid color-mix(in srgb, var(--rubric) 40%, transparent);
+	}
+}
+
+/* ——— Stain ———————————————————————————————————————————————— */
+.stain {
+	display: block;
+	position: relative;
+	height: 0;
+	pointer-events: none;
+	z-index: 0;
+}
+
+.stain svg {
+	position: absolute;
+	top: calc(var(--size) / -2);
+	width: var(--size);
+	height: var(--size);
+	transform: rotate(var(--rot, 0deg));
+}
+
+.stain.side-left svg { left: -3%; }
+.stain.side-right svg { right: -3%; }
+.stain.side-center svg { left: calc(50% - var(--size) / 2); }
+
+/* ——— Phones: floating objects take the full width ———————— */
+@media (max-width: 560px) {
+	.pasted.pos-left,
+	.pasted.pos-right {
+		float: none;
+		width: min(100%, 22rem);
+		margin: 1.4em auto;
+	}
+	.note.pos-left,
+	.note.pos-right {
+		width: 85%;
+	}
+}

@@ -1,0 +1,58 @@
+---
+interface Props {
+	/** divider = horizontal flourish; end = end-of-chapter tailpiece */
+	kind?: 'divider' | 'end';
+}
+const { kind = 'divider' } = Astro.props;
+---
+
+{
+	kind === 'divider' ? (
+		<svg class="ornament" viewBox="0 0 240 24" aria-hidden="true">
+			{[undefined, 'translate(240 0) scale(-1 1)'].map((t) => (
+				<g transform={t}>
+					<path d="M110 12 C 98 12, 94 5, 84 5 C 74 5, 72 17, 81 17.5 C 87 18, 88 11, 82.5 10.5" />
+					<path d="M80 12 C 60 12, 40 13, 8 12" stroke-width="0.9" />
+					<path d="M58 12.3 C 52 7, 44 7, 40 10" stroke-width="0.8" />
+					<circle cx="6" cy="12" r="1.4" />
+				</g>
+			))}
+			<path class="lozenge" d="M120 5 L126 12 L120 19 L114 12 Z" />
+		</svg>
+	) : (
+		<svg class="ornament end" viewBox="0 0 120 60" aria-hidden="true">
+			<path d="M60 4 C 50 14, 30 12, 22 22 C 16 30, 26 38, 34 32 C 40 27, 34 21, 29 25" />
+			<path d="M60 4 C 70 14, 90 12, 98 22 C 104 30, 94 38, 86 32 C 80 27, 86 21, 91 25" />
+			<path d="M60 14 C 56 26, 64 34, 60 46" />
+			<path class="lozenge" d="M60 44 L64 50 L60 56 L56 50 Z" />
+			<circle cx="60" cy="10" r="2" class="lozenge" />
+		</svg>
+	)
+}
+
+<style>
+	.ornament {
+		display: block;
+		width: min(15rem, 70%);
+		height: auto;
+		margin: 1.1rem auto;
+		fill: none;
+		stroke: var(--gold);
+		stroke-width: 1.2;
+		stroke-linecap: round;
+		overflow: visible;
+		break-inside: avoid;
+	}
+
+	.ornament circle,
+	.ornament .lozenge {
+		fill: var(--rubric);
+		stroke: var(--gold);
+		stroke-width: 0.8;
+	}
+
+	.end {
+		width: 5rem;
+		margin-top: 2rem;
+	}
+</style>

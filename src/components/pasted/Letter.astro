@@ -1,0 +1,29 @@
+---
+import { styleVars, type Position } from './util';
+
+interface Props {
+	/** Who signs it (shown in script at the end). */
+	from?: string;
+	/** Addressee: "Dear Malrien" becomes "Dear Malrien," */
+	to?: string;
+	/** Date/place at the top, e.g. "Ishgard, 3rd Sun of the Umbral Moon" */
+	date?: string;
+	/** Letter(s) stamped into the wax seal. Omit for no seal. */
+	seal?: string;
+	tilt?: number;
+	position?: Position;
+	width?: string | number;
+}
+
+const { from, to, date, seal, tilt = -0.6, position = 'center', width } = Astro.props;
+---
+
+<div class:list={['pasted', 'letter', `pos-${position}`]} style={styleVars(tilt, width)}>
+	<div class="letter-paper">
+		{date && <p class="letter-date">{date}</p>}
+		{to && <p class="letter-to">{to},</p>}
+		<div class="letter-body"><slot /></div>
+		{from && <p class="letter-signature">{from}</p>}
+		{seal && <span class="seal" aria-hidden="true">{seal}</span>}
+	</div>
+</div>

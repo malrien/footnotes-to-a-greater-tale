@@ -1,0 +1,123 @@
+---
+import BookLayout from '../../layouts/BookLayout.astro';
+import Sheet from '../../components/Sheet.astro';
+import Ornament from '../../components/Ornament.astro';
+import { published, url } from '../../lib/book';
+
+const notes = (await published('notes')).sort((a, b) => a.data.order - b.data.order);
+
+const labels = { letter: 'Letter', diary: 'Diary', fragment: 'Fragment' } as const;
+---
+
+<BookLayout title="Notes & Letters">
+	<Sheet>
+		<p class="kicker">Loose papers between the pages</p>
+		<h1 class="page-title">Notes & Letters</h1>
+		<Ornament />
+
+		<ul class="notes">
+			{
+				notes.map((n) => (
+					<li>
+						<a href={url(`/notes/${n.id}`)}>
+							<span class="icon" aria-hidden="true">
+								{n.data.kind === 'letter' && (
+									<svg viewBox="0 0 24 24">
+										<path d="M3 6h18v12H3z" />
+										<path d="m3 6 9 7 9-7" />
+										<circle cx="12" cy="13.5" r="2.2" class="wax" />
+									</svg>
+								)}
+								{n.data.kind === 'diary' && (
+									<svg viewBox="0 0 24 24">
+										<path d="M6 3h12v18H6z" />
+										<path d="M9 8h6M9 11h6M9 14h4" />
+									</svg>
+								)}
+								{n.data.kind === 'fragment' && (
+									<svg viewBox="0 0 24 24">
+										<path d="M5 4h14l-1 5 1 4-2 3 1 4H6l1-4-2-3 1-5z" />
+									</svg>
+								)}
+							</span>
+							<span class="text">
+								<span class="kind">{labels[n.data.kind]}</span>
+								<span class="title">
+									{n.data.title}
+									{n.data.draft && <em> (draft)</em>}
+								</span>
+								{(n.data.world_date || n.data.from) && (
+									<span class="meta">{[n.data.from && `from ${n.data.from}`, n.data.world_date].filter(Boolean).join(' · ')}</span>
+								)}
+							</span>
+						</a>
+					</li>
+				))
+			}
+		</ul>
+	</Sheet>
+</BookLayout>
+
+<style>
+	.notes {
+		list-style: none;
+		padding: 0;
+		margin: 1.5rem 0 0;
+	}
+
+	.notes li + li {
+		border-top: 1px dashed color-mix(in srgb, var(--ink) 22%, transparent);
+	}
+
+	a {
+		display: flex;
+		gap: 1rem;
+		align-items: center;
+		padding: 1rem 0.3rem;
+		color: var(--ink);
+		text-decoration: none;
+	}
+
+	.icon svg {
+		width: 2.2rem;
+		height: 2.2rem;
+		fill: none;
+		stroke: var(--ink-soft);
+		stroke-width: 1.3;
+		stroke-linejoin: round;
+	}
+
+	.wax {
+		fill: var(--rubric);
+		stroke: none;
+	}
+
+	.text {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.kind {
+		font-family: var(--f-smallcaps);
+		font-size: 0.8rem;
+		letter-spacing: 0.2em;
+		color: var(--rubric);
+	}
+
+	.title {
+		font-size: 1.2rem;
+	}
+
+	a:hover .title {
+		color: var(--rubric);
+	}
+
+	.title em {
+		color: var(--ink-faded);
+	}
+
+	.meta {
+		font-style: italic;
+		color: var(--ink-faded);
+	}
+</style>

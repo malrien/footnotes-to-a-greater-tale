@@ -1,0 +1,41 @@
+---
+import '../styles/book.css';
+import Ornament from './Ornament.astro';
+
+interface Props {
+	draft?: boolean;
+	/** First letter of the text (initialOf), for the drop cap. */
+	initial?: string;
+}
+const { draft = false, initial } = Astro.props;
+---
+
+<div class="book" data-book>
+	<button class="book-turn prev" type="button" data-turn="-1" aria-label="Previous page">‹</button>
+	<div class="book-binding">
+		<article class="book-block paper">
+			<span class="gutter-fold" aria-hidden="true"></span>
+			{draft && <p class="draft-stamp">Draft</p>}
+			<div class="book-window">
+				<div class="book-flow">
+					<slot name="head" />
+					<div class="prose dropcap" data-initial={initial}>
+						<slot />
+					</div>
+					<Ornament kind="end" />
+					<span class="flow-end" aria-hidden="true"></span>
+				</div>
+			</div>
+			<span class="page-num left" aria-hidden="true"></span>
+			<span class="page-num right" aria-hidden="true"></span>
+			<button class="page-corner prev" type="button" data-turn="-1" tabindex="-1" aria-hidden="true"></button>
+			<button class="page-corner next" type="button" data-turn="1" tabindex="-1" aria-hidden="true"></button>
+		</article>
+	</div>
+	<button class="book-turn next" type="button" data-turn="1" aria-label="Next page">›</button>
+	<p class="book-status" aria-live="polite"></p>
+</div>
+
+<script>
+	import '../scripts/book-mode';
+</script>

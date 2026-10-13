@@ -1,0 +1,28 @@
+---
+import { styleVars, assetUrl, tiltFrom, type Position } from './util';
+
+interface Props {
+	src: string;
+	caption?: string;
+	/** Alt text; defaults to the caption. */
+	alt?: string;
+	/** corners = two strips of tape; top = one strip on top; album = photo-album corners */
+	tape?: 'corners' | 'top' | 'album' | 'none';
+	tilt?: number;
+	position?: Position;
+	width?: string | number;
+}
+
+const { src, caption, alt, tape = 'corners', position = 'right', width } = Astro.props;
+const tilt = Astro.props.tilt ?? tiltFrom(src);
+const tapeClass = tape === 'corners' ? 'tape' : tape === 'top' ? 'tape-top' : '';
+---
+
+<figure class:list={['pasted', 'photo', `pos-${position}`, `style-${tape}`]} style={styleVars(tilt, width)}>
+	<div class:list={['photo-frame', tapeClass]}>
+		{tape === 'album' && ['c1', 'c2', 'c3', 'c4'].map((c) => <span class={`corner ${c}`} aria-hidden="true" />)}
+		<img src={assetUrl(src)} alt={alt ?? caption ?? ''} loading="lazy" decoding="async" />
+		{caption && tape !== 'album' && <figcaption>{caption}</figcaption>}
+	</div>
+	{caption && tape === 'album' && <figcaption>{caption}</figcaption>}
+</figure>

@@ -1,0 +1,158 @@
+---
+/**
+ * The inside of the contents sheet. Used by /contents and, as an exact
+ * miniature, by the first page under the cover — so the opening
+ * animation can morph one into the other seamlessly.
+ */
+import Ornament from './Ornament.astro';
+import { sortedChapters, roman, url } from '../lib/book';
+
+const chapters = await sortedChapters();
+
+const appendices = [
+	{ href: '/profile', title: 'The Author', note: 'who writes these lines' },
+	{ href: '/characters', title: 'Dramatis Personae', note: 'those who crossed my path' },
+	{ href: '/notes', title: 'Notes & Letters', note: 'loose papers between the pages' },
+	{ href: '/glossary', title: 'Glossary', note: 'places, names and things' },
+];
+---
+
+<p class="kicker">Index</p>
+<h1 class="page-title">Contents</h1>
+<Ornament />
+
+{
+	chapters.length === 0 ? (
+		<p class="empty">No chapters written yet. The ink is waiting.</p>
+	) : (
+		<ol class="toc">
+			{chapters.map((c) => (
+				<li>
+					<a href={url(`/chapters/${c.id}`)}>
+						<span class="num">{c.data.number === 0 ? '❦' : roman(c.data.number)}</span>
+						<span class="name">
+							{c.data.title}
+							{c.data.draft && <em class="draft"> (draft)</em>}
+						</span>
+						<span class="leader" aria-hidden="true" />
+						<span class="where">{c.data.location ?? ''}</span>
+					</a>
+					{c.data.summary && <p class="summary">{c.data.summary}</p>}
+				</li>
+			))}
+		</ol>
+	)
+}
+
+<h2 class="appendices-title">Appendices</h2>
+<ul class="toc">
+	{
+		appendices.map((a) => (
+			<li>
+				<a href={url(a.href)}>
+					<span class="num">❧</span>
+					<span class="name">{a.title}</span>
+					<span class="leader" aria-hidden="true" />
+					<span class="where">{a.note}</span>
+				</a>
+			</li>
+		))
+	}
+</ul>
+
+<style>
+	.toc {
+		list-style: none;
+		padding: 0;
+		margin: 1.5rem 0 0;
+		font-size: 1.15rem;
+	}
+
+	.toc li + li {
+		margin-top: 1.1rem;
+	}
+
+	.toc a {
+		display: flex;
+		align-items: baseline;
+		gap: 0.7rem;
+		color: var(--ink);
+		text-decoration: none;
+	}
+
+	.toc a:hover .name {
+		color: var(--rubric);
+	}
+
+	.num {
+		flex: 0 0 3rem;
+		font-family: var(--f-smallcaps);
+		color: var(--rubric);
+		text-align: right;
+	}
+
+	.name {
+		font-family: var(--f-smallcaps);
+		letter-spacing: 0.03em;
+		transition: color 0.2s;
+	}
+
+	.draft {
+		color: var(--ink-faded);
+		font-family: var(--f-body);
+	}
+
+	.leader {
+		flex: 1;
+		min-width: 1.5rem;
+		border-bottom: 2px dotted color-mix(in srgb, var(--ink) 35%, transparent);
+		transform: translateY(-0.3em);
+	}
+
+	.where {
+		font-style: italic;
+		color: var(--ink-soft);
+		font-size: 0.95em;
+		text-align: right;
+	}
+
+	.summary {
+		margin: 0.2rem 0 0 3.7rem;
+		font-style: italic;
+		color: var(--ink-faded);
+		font-size: 0.98rem;
+	}
+
+	.appendices-title {
+		margin: 3rem 0 0;
+		font-family: var(--f-smallcaps);
+		font-weight: normal;
+		color: var(--rubric);
+		text-align: center;
+		letter-spacing: 0.2em;
+		font-size: 1.1rem;
+	}
+
+	.empty {
+		text-align: center;
+		font-style: italic;
+		color: var(--ink-soft);
+	}
+
+	@media (max-width: 560px) {
+		.toc a {
+			flex-wrap: wrap;
+		}
+		.leader {
+			display: none;
+		}
+		.where {
+			flex-basis: 100%;
+			text-align: left;
+			padding-left: 3.7rem;
+		}
+		.summary {
+			margin-left: 3.7rem;
+		}
+	}
+</style>

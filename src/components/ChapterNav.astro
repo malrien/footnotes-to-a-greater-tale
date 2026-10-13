@@ -1,0 +1,96 @@
+---
+import { url, chapterLabel } from '../lib/book';
+
+interface Neighbour {
+	id: string;
+	data: { title: string; number: number };
+}
+interface Props {
+	prev?: Neighbour;
+	next?: Neighbour;
+}
+const { prev, next } = Astro.props;
+---
+
+<nav class="chapter-nav" aria-label="Chapter navigation">
+	{
+		prev ? (
+			<a class="prev" href={url(`/chapters/${prev.id}`)}>
+				<small>‹ {chapterLabel(prev.data.number)}</small>
+				<span>{prev.data.title}</span>
+			</a>
+		) : (
+			<span />
+		)
+	}
+	<a class="contents" href={url('/contents')}>Contents</a>
+	{
+		next ? (
+			<a class="next" href={url(`/chapters/${next.id}`)}>
+				<small>{chapterLabel(next.data.number)} ›</small>
+				<span>{next.data.title}</span>
+			</a>
+		) : (
+			<span />
+		)
+	}
+</nav>
+
+<style>
+	.chapter-nav {
+		display: grid;
+		grid-template-columns: 1fr auto 1fr;
+		align-items: center;
+		gap: 1rem;
+		max-width: 46rem;
+		margin: 2.5rem auto 0;
+		font-family: var(--f-smallcaps);
+		color: var(--gold-light);
+	}
+
+	a {
+		color: var(--gold-light);
+		text-decoration: none;
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+	}
+
+	a span {
+		font-family: var(--f-body);
+		font-style: italic;
+		opacity: 0.85;
+	}
+
+	a:hover span {
+		text-decoration: underline;
+	}
+
+	small {
+		font-size: 0.85rem;
+		letter-spacing: 0.12em;
+		opacity: 0.75;
+	}
+
+	.next {
+		text-align: right;
+	}
+
+	.contents {
+		letter-spacing: 0.15em;
+		padding: 0.4rem 0.9rem;
+		border: 1px solid color-mix(in srgb, var(--gold) 50%, transparent);
+		border-radius: 999px;
+	}
+
+	@media (max-width: 560px) {
+		.chapter-nav {
+			grid-template-columns: 1fr 1fr;
+		}
+		.contents {
+			grid-column: 1 / -1;
+			grid-row: 2;
+			justify-self: center;
+		}
+	}
+</style>

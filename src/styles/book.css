@@ -1,0 +1,410 @@
+/* ——— Chapter reading —————————————————————————————————————————
+   The same HTML serves both modes:
+   • scroll (default): one long sheet you scroll through;
+   • book: two-page spreads in CSS columns, turned by book-mode.ts. */
+
+.book {
+	position: relative;
+	max-width: 48rem;
+	margin: 0 auto;
+}
+
+.book-block {
+	padding: clamp(2.6rem, 7vw, 5rem) clamp(1.6rem, 7vw, 5rem) clamp(3rem, 7vw, 5rem);
+}
+
+.book-turn,
+.page-num,
+.book-status,
+.gutter-fold,
+.page-corner {
+	display: none;
+}
+
+.flow-end {
+	display: block;
+	height: 0;
+}
+
+.chapter-head {
+	margin-bottom: 1.6rem;
+	break-inside: avoid;
+}
+
+.draft-stamp {
+	position: absolute;
+	top: 2.2rem;
+	right: 2rem;
+	margin: 0;
+	padding: 0.2em 0.6em;
+	font-family: var(--f-smallcaps);
+	letter-spacing: 0.2em;
+	color: var(--rubric);
+	border: 2px solid var(--rubric);
+	border-radius: 4px;
+	transform: rotate(8deg);
+	opacity: 0.7;
+	z-index: 3;
+}
+
+/* ——— Mode switch ——————————————————————————————————————————— */
+.reading-bar {
+	display: flex;
+	justify-content: center;
+	margin: 0 auto 1.4rem;
+}
+
+/* ——— Book mode ————————————————————————————————————————————— */
+:root[data-reading='book'] .book {
+	--binding: 16px;
+	--pages: 2;
+	--page-w: clamp(260px, calc((100vw - 32px - 7rem - 2 * var(--binding)) / 2), 540px);
+	--page-h: clamp(440px, calc(100dvh - 11.5rem), 800px);
+	--pad-x: clamp(1.4rem, calc(var(--page-w) * 0.1), 3.2rem);
+	--pad-top: 2.6rem;
+	--pad-bot: 3.4rem;
+	max-width: none;
+	display: grid;
+	grid-template-columns: auto auto auto;
+	grid-template-areas:
+		'prev book next'
+		'. status .';
+	justify-content: center;
+	align-items: center;
+	gap: 0.6rem 0.8rem;
+}
+
+:root[data-reading='book'] .book-binding {
+	grid-area: book;
+	position: relative;
+	padding: var(--binding);
+	border-radius: 8px 10px 10px 8px;
+	background-color: var(--leather);
+	background-image:
+		radial-gradient(ellipse at 35% 25%, rgba(255, 220, 170, 0.1), transparent 60%),
+		url('../assets/textures/leather.svg'),
+		linear-gradient(160deg, var(--leather), var(--leather-2));
+	box-shadow:
+		inset 0 0 0 1px rgba(255, 220, 160, 0.08),
+		inset 0 0 30px rgba(0, 0, 0, 0.6),
+		0 26px 60px rgba(0, 0, 0, 0.65);
+}
+
+/* Edges of the stacked leaves underneath */
+:root[data-reading='book'] .book-binding::before {
+	content: '';
+	position: absolute;
+	inset: calc(var(--binding) - 2px) calc(var(--binding) - 5px) calc(var(--binding) - 6px) calc(var(--binding) - 5px);
+	border-radius: 3px;
+	background: repeating-linear-gradient(
+		0deg,
+		color-mix(in srgb, var(--paper-2) 85%, #000) 0 1px,
+		var(--paper-2) 1px 3px
+	);
+}
+
+:root[data-reading='book'] .book-block {
+	position: relative;
+	width: calc(var(--pages) * var(--page-w));
+	height: var(--page-h);
+	padding: 0;
+	perspective: 2600px;
+}
+
+/* Keep the book on its own GPU layer for good. Otherwise every page turn
+   creates the layer and tears it down again, repainting the whole book
+   each time: the "blink". Clones are left out so nothing inside the
+   turning leaf becomes a separate layer. */
+:root[data-reading='book'] .book-block:not(.clone) {
+	will-change: transform;
+}
+
+:root[data-reading='book'] .book-window {
+	position: absolute;
+	left: var(--pad-x);
+	top: var(--pad-top);
+	width: calc(var(--pages) * var(--page-w) - 2 * var(--pad-x));
+	height: calc(var(--page-h) - var(--pad-top) - var(--pad-bot));
+	overflow: hidden;
+}
+
+:root[data-reading='book'] .book-flow {
+	height: 100%;
+	column-width: calc(var(--page-w) - 2 * var(--pad-x));
+	column-gap: calc(2 * var(--pad-x));
+	column-fill: auto;
+	transform: translateX(calc(var(--spread, 0) * var(--pages) * var(--page-w) * -1));
+}
+
+:root[data-reading='book'] .prose {
+	font-size: clamp(0.98rem, calc(var(--page-w) * 0.034), 1.16rem);
+	line-height: 1.55;
+}
+
+:root[data-reading='book'] .draft-stamp {
+	top: 1rem;
+	right: 1.4rem;
+}
+
+/* Pasted objects must fit on one page */
+:root[data-reading='book'] .pasted img {
+	max-height: calc(var(--page-h) * 0.42);
+	width: auto;
+	max-width: 100%;
+	margin-inline: auto;
+}
+
+:root[data-reading='book'] .margin-note,
+:root[data-reading='book'] .margin-note.side-left {
+	width: 42%;
+	margin: 0.3em 0 0.6em 1rem;
+	float: right;
+	padding-left: 0.7em;
+	border-left: 1px solid color-mix(in srgb, var(--rubric) 40%, transparent);
+}
+
+/* Center fold */
+:root[data-reading='book'] .gutter-fold {
+	display: block;
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 50%;
+	width: 70px;
+	transform: translateX(-50%);
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(60, 30, 5, 0.1) 30%,
+		rgba(40, 20, 0, 0.38) 50%,
+		rgba(60, 30, 5, 0.1) 70%,
+		transparent
+	);
+	pointer-events: none;
+	z-index: 2;
+}
+
+/* Page numbers */
+:root[data-reading='book'] .page-num {
+	display: block;
+	position: absolute;
+	bottom: 1.3rem;
+	font-family: var(--f-smallcaps);
+	font-size: 0.9rem;
+	color: var(--ink-faded);
+	letter-spacing: 0.1em;
+}
+
+:root[data-reading='book'] .page-num.left {
+	left: var(--pad-x);
+}
+
+:root[data-reading='book'] .page-num.right {
+	right: var(--pad-x);
+}
+
+/* Turn buttons */
+:root[data-reading='book'] .book-turn {
+	display: grid;
+	place-items: center;
+	width: 2.8rem;
+	height: 2.8rem;
+	border-radius: 50%;
+	border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent);
+	background: rgba(0, 0, 0, 0.25);
+	color: var(--gold-light);
+	font-family: var(--f-body);
+	font-size: 1.6rem;
+	line-height: 1;
+	cursor: pointer;
+	transition: background 0.2s, opacity 0.2s;
+}
+
+:root[data-reading='book'] .book-turn:hover:not(:disabled) {
+	background: rgba(0, 0, 0, 0.45);
+}
+
+:root[data-reading='book'] .book-turn:disabled {
+	opacity: 0.25;
+	cursor: default;
+}
+
+.book-turn.prev { grid-area: prev; }
+.book-turn.next { grid-area: next; }
+
+:root[data-reading='book'] .book-status {
+	display: block;
+	grid-area: status;
+	margin: 0.4rem 0 0;
+	text-align: center;
+	font-family: var(--f-smallcaps);
+	letter-spacing: 0.12em;
+	font-size: 0.9rem;
+	color: var(--gold-light);
+	opacity: 0.8;
+}
+
+/* Clickable corners with a dog-ear */
+:root[data-reading='book'] .page-corner {
+	display: block;
+	position: absolute;
+	bottom: 0;
+	width: 3.6rem;
+	height: 3.6rem;
+	border: 0;
+	padding: 0;
+	background: transparent;
+	cursor: pointer;
+	z-index: 4;
+	transition: background 0.25s;
+}
+
+:root[data-reading='book'] .page-corner.prev { left: 0; }
+:root[data-reading='book'] .page-corner.next { right: 0; }
+
+:root[data-reading='book'] .page-corner.next:hover:not(:disabled) {
+	background: linear-gradient(
+		to top left,
+		var(--leather-2) 0 45%,
+		color-mix(in srgb, var(--paper-2) 80%, #000) 45% 47%,
+		var(--paper) 50%,
+		transparent 50%
+	);
+	filter: drop-shadow(-2px -2px 3px rgba(0, 0, 0, 0.25));
+}
+
+:root[data-reading='book'] .page-corner.prev:hover:not(:disabled) {
+	background: linear-gradient(
+		to top right,
+		var(--leather-2) 0 45%,
+		color-mix(in srgb, var(--paper-2) 80%, #000) 45% 47%,
+		var(--paper) 50%,
+		transparent 50%
+	);
+	filter: drop-shadow(2px -2px 3px rgba(0, 0, 0, 0.25));
+}
+
+:root[data-reading='book'] .page-corner:disabled {
+	cursor: default;
+}
+
+/* ——— The turning leaf (created by the script) ————————————— */
+.turning-leaf {
+	position: absolute;
+	top: 0;
+	width: var(--page-w);
+	height: var(--page-h);
+	transform-style: preserve-3d;
+	z-index: 6;
+	pointer-events: none;
+}
+
+/* Give the leaf, its faces and the underlay their own GPU layers right away,
+   while they sit still looking exactly like the page. Otherwise the layers
+   are only created, and painted from scratch, when the turn starts, and for
+   those first frames the new page underneath shows through: the blink on
+   click. */
+.turning-leaf,
+.turning-leaf .face,
+.underlay {
+	will-change: transform;
+}
+
+.turning-leaf .face,
+.underlay {
+	position: absolute;
+	inset: 0;
+	overflow: hidden;
+	backface-visibility: hidden;
+}
+
+.underlay {
+	width: var(--page-w);
+	height: var(--page-h);
+	inset: 0 auto auto auto;
+	z-index: 5;
+	pointer-events: none;
+}
+
+.turning-leaf .back {
+	transform: rotateY(180deg);
+}
+
+.turning-leaf .face::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	animation: var(--shade-anim) var(--turn-duration) ease-in-out forwards;
+	/* The animated shade gets a layer of its own; without this it can show
+	   through from the hidden side of the leaf and darken the page early. */
+	backface-visibility: hidden;
+}
+
+.turning-leaf .front::after {
+	background: linear-gradient(to left, rgba(30, 15, 0, 0.05), rgba(30, 15, 0, 0.4));
+	--shade-anim: darken;
+}
+
+.turning-leaf .back::after {
+	background: linear-gradient(to right, rgba(30, 15, 0, 0.05), rgba(30, 15, 0, 0.45));
+	--shade-anim: lighten;
+}
+
+.turning-leaf.backward .front::after {
+	background: linear-gradient(to right, rgba(30, 15, 0, 0.05), rgba(30, 15, 0, 0.4));
+}
+
+.turning-leaf.backward .back::after {
+	background: linear-gradient(to left, rgba(30, 15, 0, 0.05), rgba(30, 15, 0, 0.45));
+}
+
+@keyframes darken {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+
+@keyframes lighten {
+	from { opacity: 1; }
+	to { opacity: 0; }
+}
+
+.book-block.clone {
+	position: absolute !important;
+	top: 0;
+	margin: 0;
+}
+
+/* Clones don't need a shadow on the desk */
+.book-block.clone::after {
+	display: none;
+}
+
+/* ——— Single page (narrow screens) ————————————————————————— */
+@media (max-width: 899px) {
+	:root[data-reading='book'] .book {
+		--binding: 10px;
+		--pages: 1;
+		--page-w: min(540px, calc(100vw - 32px - 2 * var(--binding)));
+		--page-h: clamp(420px, calc(100dvh - 12rem), 760px);
+		--pad-top: 2.2rem;
+		--pad-bot: 3rem;
+		grid-template-columns: auto 1fr auto;
+		grid-template-areas:
+			'book book book'
+			'prev status next';
+		justify-content: stretch;
+		justify-items: center;
+	}
+
+	:root[data-reading='book'] .gutter-fold,
+	:root[data-reading='book'] .page-num.right,
+	:root[data-reading='book'] .page-corner.prev {
+		display: none;
+	}
+
+	:root[data-reading='book'] .page-num.left {
+		left: 50%;
+		transform: translateX(-50%);
+	}
+}

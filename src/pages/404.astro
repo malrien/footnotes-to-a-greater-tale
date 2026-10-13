@@ -1,0 +1,20 @@
+---
+import BookLayout from '../layouts/BookLayout.astro';
+import Sheet from '../components/Sheet.astro';
+import Ornament from '../components/Ornament.astro';
+import { url } from '../lib/book';
+---
+
+<BookLayout title="A torn-out page">
+	<Sheet>
+		<p class="kicker">A lost leaf</p>
+		<h1 class="page-title">This page was torn out</h1>
+		<Ornament />
+		<div class="prose">
+			<p style="text-align:center">
+				Only the ragged stitching remains where it used to be. Perhaps the wind carried it off, or perhaps I never wrote it at all.
+			</p>
+		</div>
+		<p style="text-align:center;margin-top:2rem"><a href={url('/contents')}>Back to the contents</a></p>
+	</Sheet>
+</BookLayout>

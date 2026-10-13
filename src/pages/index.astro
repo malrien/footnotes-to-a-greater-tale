@@ -1,0 +1,540 @@
+---
+import BookLayout from '../layouts/BookLayout.astro';
+import Sheet from '../components/Sheet.astro';
+import ContentsBody from '../components/ContentsBody.astro';
+import { url } from '../lib/book';
+---
+
+<BookLayout noNav>
+	<div class="desk">
+		<div class="dim" aria-hidden="true"></div>
+		<div class="closed-book" id="book">
+			<span class="cover-pages" aria-hidden="true"></span>
+
+			<!--
+				An exact miniature of the /contents sheet: laid out at the real sheet's
+				width and scaled down to fit the page. While the book is going to or
+				coming from /contents, it borrows the sheet's view-transition-name so
+				the browser morphs one into the other.
+			-->
+			<div class="first-page" aria-hidden="true" inert>
+				<div class="replica">
+					<Sheet class="page-proportions">
+						<ContentsBody />
+					</Sheet>
+				</div>
+			</div>
+
+			<a
+				class="cover"
+				href={url('/contents')}
+				data-astro-prefetch="load"
+				aria-label="Open the book: Footnotes to a Greater Tale, by Malrien Vealwood"
+			>
+				<span class="cover-front leather">
+					<span class="spine" aria-hidden="true"></span>
+					<span class="frame" aria-hidden="true">
+						{['tl', 'tr', 'bl', 'br'].map((c) => (
+							<svg class={`cover-corner ${c}`} viewBox="0 0 60 60">
+								<path d="M4 56 V4 H56" />
+								<path d="M10 50 V10 H50" />
+								<path d="M4 4 C 20 8, 26 14, 22 24 C 19 31, 10 28, 13 22 C 15 18, 20 19, 20 22" />
+								<circle cx="10" cy="10" r="2.5" />
+							</svg>
+						))}
+					</span>
+
+					<span class="cover-content">
+						<span class="cover-heading">
+							<span class="cover-title">Footnotes</span>
+							<span class="cover-subtitle">to a Greater Tale</span>
+						</span>
+						<svg class="crystal" viewBox="0 0 80 120" aria-hidden="true">
+							<!-- Upside down; rotated inside the SVG so the embossed shadow still falls downward -->
+							<g transform="rotate(180 40 60)">
+								<path d="M40 4 L64 44 L40 116 L16 44 Z" />
+								<path d="M40 4 L40 116 M16 44 H64 M28 24 L40 44 L52 24" />
+							</g>
+							<circle cx="40" cy="60" r="30" class="halo" />
+						</svg>
+						<span class="cover-sub">written in mine own hand,<br />across the lands of Eorzea</span>
+						<span class="cover-author">Malrien Vealwood</span>
+					</span>
+				</span>
+
+				<!-- Inside of the cover: marbled endpaper with a bookplate -->
+				<span class="cover-back" aria-hidden="true">
+					<span class="bookplate">
+						<span class="ex-libris">Ex Libris</span>
+						<span class="owner">Malrien</span>
+					</span>
+				</span>
+			</a>
+		</div>
+	</div>
+
+	<Fragment slot="head">
+		<!-- Hold the first paint until the book exists, so `pagereveal` can set it up -->
+		<link rel="expect" href="#book" blocking="render" />
+		<script is:inline define:vars={{ coverPath: url('/') }}>
+		// Coming back from any page of the book: arrive with the book already
+		// open, let that page's sheet shrink back onto the book's page (pages
+		// that can, see BookLayout), then close the cover.
+		// In <head> on purpose: `pagereveal` fires before the first paint.
+		(() => {
+			const cameFromBook = () => {
+				const from = window.navigation?.activation?.from?.url || document.referrer;
+				try {
+					const u = new URL(from);
+					const trim = (p) => p.replace(/\/$/, '');
+					return (
+						u.origin === location.origin &&
+						u.pathname.startsWith(trim(coverPath)) &&
+						trim(u.pathname) !== trim(coverPath)
+					);
+				} catch {
+					return false;
+				}
+			};
+
+			const closeAfter = (done) => {
+				const book = document.getElementById('book');
+				const mini = book.querySelector('.replica .sheet');
+				book.classList.add('instant', 'opening');
+				// Never leave the book stuck open if the transition stalls (e.g. background tab).
+				const timeout = new Promise((r) => setTimeout(r, 2000));
+				let closed = false;
+				const close = () => {
+					if (closed) return;
+					closed = true;
+					mini.style.viewTransitionName = '';
+					book.classList.remove('instant');
+					book.offsetWidth; // commit the open state before animating away from it
+					book.classList.add('closing');
+					book.classList.remove('opening');
+					setTimeout(() => book.classList.remove('closing'), 1200);
+				};
+				Promise.race([done, timeout]).then(close, close);
+			};
+
+			if ('PageRevealEvent' in window) {
+				addEventListener('pagereveal', (e) => {
+					if (!cameFromBook() || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+					if (e.viewTransition) {
+						e.viewTransition.ready.catch(() => {}); // skipped transitions reject this; that's fine
+						document.querySelector('#book .replica .sheet').style.viewTransitionName = 'book-page';
+					}
+					closeAfter(e.viewTransition ? e.viewTransition.finished : new Promise((r) => setTimeout(r, 300)));
+				});
+			} else if (cameFromBook() && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+				// No cross-document transitions: just play the cover closing.
+				addEventListener('DOMContentLoaded', () => closeAfter(new Promise((r) => setTimeout(r, 300))));
+			}
+		})();
+		</script>
+	</Fragment>
+</BookLayout>
+
+<script>
+	const book = document.querySelector<HTMLElement>('.closed-book')!;
+	const link = book.querySelector<HTMLAnchorElement>('a.cover')!;
+	const page = book.querySelector<HTMLElement>('.first-page')!;
+	const replica = book.querySelector<HTMLElement>('.replica')!;
+	const mini = replica.querySelector<HTMLElement>('.sheet')!;
+	const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+
+	// Browsers with cross-document view transitions morph the first page
+	// into the real /contents sheet. Others get a zoom into the page instead.
+	const morphs = 'PageRevealEvent' in window;
+
+	const OPEN_MS = 1000;
+	const ZOOM_MS = 750;
+
+	// Fit the miniature contents sheet to the page.
+	const fit = () => page.style.setProperty('--k', String(page.clientWidth / replica.offsetWidth));
+	fit();
+	new ResizeObserver(fit).observe(page);
+	document.fonts?.ready.then(fit);
+
+	let playing = false;
+	let timers: number[] = [];
+
+	const go = () => {
+		timers.forEach(clearTimeout);
+		location.href = link.href;
+	};
+
+	link.addEventListener('click', (e) => {
+		// Ctrl/⌘/Shift/middle click keep their normal "open elsewhere" behaviour.
+		if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+		e.preventDefault();
+		// A second click (or reduced motion) skips straight to the contents.
+		if (playing || reducedMotion.matches) return go();
+
+		playing = true;
+		book.classList.add('opening');
+		if (morphs) mini.style.viewTransitionName = 'book-page';
+		timers = morphs
+			? [window.setTimeout(go, OPEN_MS)]
+			: [
+					window.setTimeout(() => book.classList.add('zooming'), OPEN_MS),
+					window.setTimeout(go, OPEN_MS + ZOOM_MS),
+				];
+		addEventListener('keydown', go, { once: true });
+	});
+
+	// Coming back with the browser's Back button can restore this page from
+	// the cache still open: snap it shut (the inline script above then decides
+	// whether to play the closing animation).
+	addEventListener('pageshow', (e) => {
+		if (!e.persisted) return;
+		timers.forEach(clearTimeout);
+		removeEventListener('keydown', go);
+		mini.style.viewTransitionName = '';
+		book.classList.add('instant');
+		book.classList.remove('opening', 'zooming', 'closing');
+		requestAnimationFrame(() => requestAnimationFrame(() => book.classList.remove('instant')));
+		playing = false;
+	});
+</script>
+
+<style>
+	.desk {
+		position: relative;
+		min-height: 100dvh;
+		display: grid;
+		place-items: center;
+		padding: 2rem 0;
+		overflow: hidden;
+	}
+
+	/* Darkens the desk while the camera moves into the page */
+	.dim {
+		position: fixed;
+		inset: 0;
+		background: var(--desk-2);
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.7s ease-in;
+	}
+
+	/* No preserve-3d here on purpose: the cover is always painted above the
+	   pages, so the two can never intersect while it rotates. Once it passes
+	   90° it lies to the left of the spine, clear of the pages. */
+	.closed-book {
+		--open: 1s;
+		--zoom: 0.75s;
+		position: relative;
+		z-index: 1;
+		width: min(27rem, 88vw);
+		aspect-ratio: 3 / 4.1;
+		transform-origin: 50% 22%;
+		transition: transform 0.7s cubic-bezier(0.3, 0.1, 0.2, 1);
+		/* Own GPU layer from the start, so moving/zooming never repaints it */
+		will-change: transform;
+	}
+
+	.closed-book:hover,
+	.closed-book:focus-within {
+		transform: translateY(-6px);
+	}
+
+	.cover {
+		position: absolute;
+		inset: 0;
+		z-index: 1;
+		display: block;
+		border-radius: 6px 14px 14px 6px;
+		text-decoration: none;
+		transform-origin: left center;
+		transform: perspective(1400px) rotateY(0deg);
+		transform-style: preserve-3d;
+		transition: transform 0.7s cubic-bezier(0.3, 0.1, 0.2, 1);
+		outline-offset: 8px;
+		will-change: transform;
+	}
+
+	/* The cover lifts a little at the spine, as if about to open */
+	.cover:hover,
+	.cover:focus-visible {
+		transform: perspective(1400px) rotateY(-7deg);
+	}
+
+	.cover-front,
+	.cover-back {
+		position: absolute;
+		inset: 0;
+		backface-visibility: hidden;
+		-webkit-backface-visibility: hidden;
+	}
+
+	.cover-front {
+		border-radius: 6px 14px 14px 6px;
+		transition: box-shadow 0.7s;
+	}
+
+	.cover:hover .cover-front,
+	.cover:focus-visible .cover-front {
+		box-shadow:
+			inset 0 0 40px rgba(0, 0, 0, 0.55),
+			14px 26px 50px rgba(0, 0, 0, 0.65);
+	}
+
+	/* ——— Opening ——————————————————————————————————————————— */
+	.closed-book.opening {
+		transition: transform var(--open) cubic-bezier(0.45, 0.05, 0.3, 1);
+	}
+
+	.closed-book.opening .cover {
+		transform: perspective(1800px) rotateY(-180deg);
+		transition: transform var(--open) cubic-bezier(0.45, 0.05, 0.3, 1);
+	}
+
+	/* On wide screens the open spread slides over to sit centred */
+	@media (min-width: 900px) {
+		.closed-book.opening {
+			transform: translateX(50%);
+		}
+	}
+
+	/* ——— Closing (after coming back from /contents) —————————————— */
+	.closed-book.closing,
+	.closed-book.closing .cover {
+		transition: transform var(--open) cubic-bezier(0.45, 0.05, 0.3, 1);
+	}
+
+	/* Jump straight to a state, without animating */
+	.closed-book.instant,
+	.closed-book.instant .cover {
+		transition: none !important;
+	}
+
+	/* ——— Zooming into the first page ————————————————————————— */
+	.closed-book.zooming {
+		transform: scale(2.1);
+		transition: transform var(--zoom) cubic-bezier(0.5, 0, 0.75, 0);
+	}
+
+	@media (min-width: 900px) {
+		.closed-book.zooming {
+			transform: translateX(50%) scale(2.1);
+		}
+	}
+
+	.desk:has(.zooming) .dim {
+		opacity: 0.9;
+	}
+
+	/* Thickness of the text block: leaves showing at the right and bottom */
+	.cover-pages {
+		position: absolute;
+		top: 8px;
+		bottom: -5px;
+		left: 14px;
+		right: -8px;
+		background:
+			linear-gradient(0deg, rgba(60, 30, 5, 0.35), transparent 3%),
+			repeating-linear-gradient(90deg, #d8c393 0 1px, #c6ad7b 1px 3px);
+		border-radius: 2px 10px 10px 2px;
+		box-shadow:
+			inset -2px 0 3px rgba(60, 30, 5, 0.35),
+			0 22px 45px rgba(0, 0, 0, 0.6);
+	}
+
+	/* ——— First page (hidden under the cover until it opens) ————— */
+	.first-page {
+		position: absolute;
+		inset: 4px 0 1px 6px;
+		overflow: hidden;
+		border-radius: 2px 8px 8px 2px;
+		background: var(--paper) url('../assets/textures/paper-grain.svg');
+		box-shadow: inset 8px 0 14px -6px rgba(40, 20, 0, 0.45);
+	}
+
+	/* Same width the sheet has on /contents (Sheet max-width, main's 16px
+	   gutters); the script scales it down to the page by --k. */
+	.replica {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: min(48rem, calc(100vw - 32px));
+		transform-origin: 0 0;
+		transform: scale(var(--k, 0.56));
+	}
+
+	/* The miniature sheet is what morphs into the real one. Keeping it at
+	   exactly the page's proportions (never growing with long contents)
+	   means both ends of the morph are the same size: the browser then only
+	   moves and scales it, which the GPU does without redrawing anything. */
+	.replica :global(.sheet) {
+		overflow: hidden;
+	}
+
+	/* ——— Inside of the cover —————————————————————————————————— */
+	.cover-back {
+		transform: rotateY(180deg);
+		border-radius: 14px 6px 6px 14px;
+		display: grid;
+		place-items: center;
+		background-color: #3c4a52;
+		background-image:
+			url('../assets/textures/paper-grain.svg'),
+			radial-gradient(ellipse 40% 25% at 20% 30%, rgba(177, 138, 72, 0.55), transparent 70%),
+			radial-gradient(ellipse 30% 40% at 75% 20%, rgba(125, 33, 25, 0.5), transparent 70%),
+			radial-gradient(ellipse 45% 30% at 65% 75%, rgba(177, 138, 72, 0.45), transparent 70%),
+			radial-gradient(ellipse 35% 25% at 25% 80%, rgba(125, 33, 25, 0.45), transparent 70%),
+			url('../assets/textures/paper-stains.svg'),
+			repeating-radial-gradient(circle at 40% 45%, rgba(240, 225, 190, 0.05) 0 2px, transparent 2px 13px),
+			repeating-radial-gradient(circle at 80% 60%, rgba(20, 30, 35, 0.1) 0 3px, transparent 3px 17px);
+		background-size: 320px 320px, auto, auto, auto, auto, 600px 600px, auto, auto;
+		box-shadow:
+			inset 0 0 0 10px var(--leather),
+			inset 0 0 30px 10px rgba(0, 0, 0, 0.5);
+	}
+
+	.bookplate {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.2rem;
+		padding: 1.2rem 1.8rem 1.1rem;
+		background: #efe3c6 url('../assets/textures/paper-grain.svg');
+		color: #3a2717;
+		outline: 1px solid #a57a2c;
+		outline-offset: -6px;
+		box-shadow: 0 3px 8px rgba(0, 0, 0, 0.45);
+		transform: rotate(-1deg);
+	}
+
+	.ex-libris {
+		font-family: var(--f-smallcaps);
+		letter-spacing: 0.25em;
+		font-size: 0.8rem;
+		color: #7d2119;
+	}
+
+	.owner {
+		font-family: var(--f-signature);
+		font-size: 2rem;
+		line-height: 1.2;
+	}
+
+	/* ——— Front of the cover ——————————————————————————————————— */
+	.spine {
+		position: absolute;
+		inset: 0 auto 0 0;
+		width: 7%;
+		border-radius: 6px 0 0 6px;
+		background:
+			linear-gradient(90deg, rgba(0, 0, 0, 0.55), rgba(255, 220, 170, 0.08) 60%, rgba(0, 0, 0, 0.45)),
+			repeating-linear-gradient(180deg, transparent 0 18%, rgba(0, 0, 0, 0.35) 18% 19%, rgba(255, 220, 160, 0.1) 19% 20%);
+	}
+
+	.frame {
+		position: absolute;
+		inset: 1.3rem 1.3rem 1.3rem calc(7% + 1.1rem);
+		border: 1.5px solid color-mix(in srgb, var(--gold) 80%, transparent);
+		box-shadow:
+			inset 0 0 0 5px transparent,
+			inset 0 0 0 6.5px color-mix(in srgb, var(--gold) 55%, transparent);
+		border-radius: 3px;
+	}
+
+	.cover-corner {
+		position: absolute;
+		width: 3.4rem;
+		height: 3.4rem;
+		fill: none;
+		stroke: var(--gold-light);
+		stroke-width: 1.6;
+		filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.7));
+	}
+
+	.cover-corner circle {
+		fill: var(--gold-light);
+		stroke: none;
+	}
+
+	.tl { top: -2px; left: -2px; }
+	.tr { top: -2px; right: -2px; transform: scaleX(-1); }
+	.bl { bottom: -2px; left: -2px; transform: scaleY(-1); }
+	.br { bottom: -2px; right: -2px; transform: scale(-1, -1); }
+
+	.cover-content {
+		position: absolute;
+		inset: 3rem 2.4rem 3rem calc(7% + 2.2rem);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 1.1rem;
+		text-align: center;
+		/* Type is sized to the cover itself (cqi), so the title always fits */
+		container-type: inline-size;
+	}
+
+	.cover-title,
+	.cover-subtitle,
+	.cover-sub,
+	.cover-author {
+		background: linear-gradient(180deg, #f6dd98 0%, #c89a3e 45%, #8a6220 55%, #e0bb6a 100%);
+		-webkit-background-clip: text;
+		background-clip: text;
+		color: transparent;
+		filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.8)) drop-shadow(0 -1px 0 rgba(255, 220, 150, 0.15));
+	}
+
+	.cover-heading {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.35rem;
+	}
+
+	.cover-title {
+		font-family: var(--f-title);
+		font-weight: 700;
+		font-size: 13cqi;
+		line-height: 1;
+		letter-spacing: 0.03em;
+		text-transform: uppercase;
+	}
+
+	.cover-subtitle {
+		font-family: var(--f-body);
+		font-style: italic;
+		font-size: 7.4cqi;
+		line-height: 1.1;
+	}
+
+	.cover-sub {
+		font-family: var(--f-body);
+		font-style: italic;
+		font-size: 4.6cqi;
+		line-height: 1.4;
+	}
+
+	.cover-author {
+		margin-top: 1.4rem;
+		font-family: var(--f-smallcaps);
+		font-size: 4.6cqi;
+		letter-spacing: 0.3em;
+		text-transform: uppercase;
+	}
+
+	.crystal {
+		width: 12cqi;
+		height: auto;
+		fill: none;
+		stroke: var(--gold-light);
+		stroke-width: 1.4;
+		stroke-linejoin: round;
+		filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.8)) drop-shadow(0 0 10px rgba(240, 200, 120, 0.25));
+	}
+
+	.crystal .halo {
+		stroke-width: 0.8;
+		stroke-dasharray: 2 4;
+		opacity: 0.7;
+	}
+</style>

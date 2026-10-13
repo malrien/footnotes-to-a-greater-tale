@@ -1,0 +1,182 @@
+/* ——— Book typography ——————————————————————————————————————— */
+.prose {
+	font-size: clamp(1.08rem, 0.35vw + 1rem, 1.25rem);
+	line-height: 1.62;
+	hyphens: auto;
+	text-wrap: pretty;
+	font-variant-ligatures: common-ligatures discretionary-ligatures;
+}
+
+.prose p {
+	margin: 0;
+	text-align: justify;
+}
+
+.prose p + p,
+.prose p + :is(.stain, .margin-note, .pasted) + p {
+	text-indent: 1.6em;
+}
+
+.prose h2,
+.prose h3 {
+	font-family: var(--f-smallcaps);
+	font-weight: normal;
+	color: var(--rubric);
+	text-align: center;
+	letter-spacing: 0.04em;
+	margin: 1.6em 0 0.8em;
+	break-after: avoid;
+}
+
+.prose h2 {
+	font-size: 1.35em;
+}
+
+.prose h3 {
+	font-size: 1.1em;
+}
+
+.prose em {
+	font-style: italic;
+}
+
+.prose strong {
+	font-weight: normal;
+	font-family: var(--f-smallcaps);
+	letter-spacing: 0.03em;
+}
+
+.prose blockquote {
+	margin: 1.2em 1.5em;
+	padding: 0 0 0 1em;
+	border-left: 2px solid color-mix(in srgb, var(--rubric) 40%, transparent);
+	font-style: italic;
+	color: var(--ink-soft);
+}
+
+.prose blockquote p {
+	text-indent: 0 !important;
+}
+
+.prose hr {
+	border: 0;
+	height: 1.2em;
+	margin: 1.4em auto;
+	text-align: center;
+	overflow: visible;
+}
+
+.prose hr::after {
+	content: '❦';
+	font-size: 1.3em;
+	color: var(--gold);
+}
+
+.prose ul,
+.prose ol {
+	padding-left: 1.4em;
+}
+
+.prose img {
+	display: block;
+	margin: 1em auto;
+}
+
+/* Drop cap: the chapter's first letter, large and ornate. */
+/* Raised initial: a big first letter standing on the first line's baseline.
+   This inline version is the fallback (Firefox); see initial-letter below. */
+.dropcap > p:first-of-type::first-letter {
+	font-family: var(--f-title);
+	font-size: 3.3em;
+	line-height: 1;
+	/* The decorative letters' flourishes overhang their box on the left; the
+	   left padding keeps them inside the column, which clips in book mode. */
+	padding-left: 0.08em;
+	margin-right: 0.04em;
+	color: var(--rubric);
+	text-shadow:
+		1px 1px 0 color-mix(in srgb, var(--gold) 60%, transparent),
+		0 0 12px color-mix(in srgb, var(--gold) 25%, transparent);
+}
+
+/* Where supported (Chrome, Edge, Safari): a raised initial. The letter is
+   three lines tall but stands on the FIRST line's baseline and rises above
+   it, so it stays joined to the rest of its word ("T" + "his"). A dropped
+   initial sank it to the third line, cut off from the word it begins. */
+@supports (initial-letter: 3 1) or (-webkit-initial-letter: 3 1) {
+	.dropcap > p:first-of-type::first-letter {
+		-webkit-initial-letter: 3 1;
+		initial-letter: 3 1;
+		line-height: normal;
+		margin: 0 0.04em 0 0.1em;
+		padding: 0;
+	}
+
+	/* Cinzel Decorative capitals whose flourish dips 10–23% below the baseline
+	   (measured). A taller first line lets the letter sit lower in it, so line
+	   two wraps beside the flourish instead of running into it. (Chrome ignores
+	   margins/padding on an initial-letter; this is what actually moves line
+	   two, measured.) data-initial is worked out at build time (initialOf() in
+	   src/lib/book.ts), so the page is right from the first paint. */
+	.dropcap:is(
+			[data-initial='A'], [data-initial='G'], [data-initial='H'], [data-initial='J'],
+			[data-initial='K'], [data-initial='L'], [data-initial='M'], [data-initial='N'],
+			[data-initial='Q'], [data-initial='R'], [data-initial='S'], [data-initial='W'],
+			[data-initial='X'], [data-initial='Z']
+		) > p:first-of-type::first-line {
+		line-height: 2;
+	}
+
+	/* Capitals whose left arm or flourish reaches left of the letter's own box
+	   (measured: T 10%, D 11%, J 9%, M 7%, N 19%, X 18% of the font size) would
+	   poke out past the text's left edge; they get a wider left margin. (em
+	   here is the unscaled font size; the rendered initial is ~1.3× larger.) */
+	.dropcap:is([data-initial='D'], [data-initial='J'], [data-initial='T']) > p:first-of-type::first-letter {
+		margin-left: 0.16em;
+	}
+
+	.dropcap[data-initial='M'] > p:first-of-type::first-letter {
+		margin-left: 0.13em;
+	}
+
+	.dropcap:is([data-initial='N'], [data-initial='X']) > p:first-of-type::first-letter {
+		margin-left: 0.28em;
+	}
+}
+
+.dropcap > p:first-of-type::first-line {
+	font-family: var(--f-smallcaps);
+	letter-spacing: 0.02em;
+}
+
+/* Page headings */
+.page-title {
+	font-family: var(--f-title);
+	font-weight: 700;
+	color: var(--ink);
+	text-align: center;
+	font-size: clamp(1.6rem, 3vw + 1rem, 2.4rem);
+	line-height: 1.15;
+	margin: 0.2em 0 0.1em;
+}
+
+.kicker {
+	font-family: var(--f-smallcaps);
+	color: var(--rubric);
+	text-align: center;
+	letter-spacing: 0.25em;
+	font-size: 0.95rem;
+	margin: 0;
+}
+
+.subtitle {
+	font-style: italic;
+	color: var(--ink-soft);
+	text-align: center;
+	margin: 0.3em 0 0;
+}
+
+.hand {
+	font-family: var(--f-hand);
+	line-height: 1.7;
+}

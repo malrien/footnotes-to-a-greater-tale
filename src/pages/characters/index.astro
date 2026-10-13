@@ -1,0 +1,106 @@
+---
+import BookLayout from '../../layouts/BookLayout.astro';
+import Sheet from '../../components/Sheet.astro';
+import Ornament from '../../components/Ornament.astro';
+import Photo from '../../components/pasted/Photo.astro';
+import Sketch from '../../components/pasted/Sketch.astro';
+import { published, url } from '../../lib/book';
+
+const characters = (await published('characters')).sort(
+	(a, b) => a.data.order - b.data.order || a.data.name.localeCompare(b.data.name),
+);
+---
+
+<BookLayout title="Dramatis Personae">
+	<Sheet width="wide">
+		<p class="kicker">Those who crossed my path</p>
+		<h1 class="page-title">Dramatis Personae</h1>
+		<Ornament />
+
+		<ul class="gallery">
+			{
+				characters.map((c) => (
+					<li>
+						<a href={url(`/characters/${c.id}`)}>
+							{c.data.portrait && c.data.portrait_style === 'sketch' ? (
+								<Sketch src={c.data.portrait} alt={`A drawing of ${c.data.name}`} position="center" width="100%" paper={c.data.portrait_paper} />
+							) : c.data.portrait ? (
+								<Photo src={c.data.portrait} alt={`Portrait of ${c.data.name}`} tape="top" position="center" width="100%" />
+							) : (
+								<span class="no-portrait" aria-hidden="true">{c.data.name.charAt(0)}</span>
+							)}
+							<span class="name">{c.data.name}</span>
+							{c.data.epithet && <span class="epithet">{c.data.epithet}</span>}
+							{c.data.relation && <span class="relation">{c.data.relation}</span>}
+						</a>
+					</li>
+				))
+			}
+		</ul>
+	</Sheet>
+</BookLayout>
+
+<style>
+	.gallery {
+		list-style: none;
+		padding: 0;
+		margin: 2rem 0 0;
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+		gap: 2.6rem 2rem;
+	}
+
+	a {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		text-align: center;
+		color: var(--ink);
+		text-decoration: none;
+	}
+
+	a :global(.pasted) {
+		margin: 0.4rem 0 0.8rem;
+		transition: transform 0.3s;
+	}
+
+	a:hover :global(.pasted) {
+		transform: rotate(0deg) scale(1.03);
+	}
+
+	.no-portrait {
+		display: grid;
+		place-items: center;
+		width: 100%;
+		aspect-ratio: 4 / 5;
+		margin-bottom: 0.8rem;
+		font-family: var(--f-title);
+		font-size: 3.5rem;
+		color: var(--rubric);
+		border: 1px solid color-mix(in srgb, var(--ink) 25%, transparent);
+		outline: 1px solid color-mix(in srgb, var(--ink) 15%, transparent);
+		outline-offset: 4px;
+	}
+
+	.name {
+		font-family: var(--f-smallcaps);
+		font-size: 1.2rem;
+		letter-spacing: 0.04em;
+	}
+
+	a:hover .name {
+		color: var(--rubric);
+	}
+
+	.epithet {
+		font-style: italic;
+		color: var(--ink-soft);
+	}
+
+	.relation {
+		font-family: var(--f-hand);
+		font-size: 0.8rem;
+		color: var(--rubric);
+		margin-top: 0.3rem;
+	}
+</style>

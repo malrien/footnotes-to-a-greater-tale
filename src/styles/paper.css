@@ -1,0 +1,66 @@
+/* ——— Aged paper ————————————————————————————————————————————
+   .paper draws a sheet with torn edges, grain, stains and burnt
+   edges. The background lives in a masked ::before so the text is
+   never distorted. */
+.paper {
+	position: relative;
+	isolation: isolate;
+}
+
+.paper::before,
+.paper::after {
+	content: '';
+	position: absolute;
+	pointer-events: none;
+}
+
+.paper::before {
+	inset: 0;
+	z-index: -1;
+	background-image:
+		url('../assets/textures/paper-grain.svg'),
+		url('../assets/textures/paper-stains.svg'),
+		radial-gradient(ellipse at 50% 40%, transparent 55%, var(--paper-burn) 130%),
+		linear-gradient(170deg, var(--paper), var(--paper-2));
+	background-size: 320px 320px, 900px 900px, 100% 100%, 100% 100%;
+	box-shadow:
+		inset 0 0 90px var(--paper-burn),
+		inset 0 0 18px var(--paper-burn);
+	mask-image:
+		url('../assets/textures/edge-left.svg'),
+		url('../assets/textures/edge-right.svg'),
+		url('../assets/textures/edge-top.svg'),
+		url('../assets/textures/edge-bottom.svg'),
+		linear-gradient(#000, #000);
+	mask-position: left top, right top, left top, left bottom, center;
+	mask-size: 14px 400px, 14px 400px, 400px 14px, 400px 14px, calc(100% - 26px) calc(100% - 26px);
+	mask-repeat: repeat-y, repeat-y, repeat-x, repeat-x, no-repeat;
+}
+
+/* The sheet's shadow on the desk */
+.paper::after {
+	inset: 12px 10px 6px;
+	z-index: -2;
+	box-shadow:
+		0 22px 45px var(--shadow),
+		0 3px 8px var(--shadow);
+}
+
+/* A sheet cut to the book's page proportions: the contents page and its
+   miniature under the cover, so one can morph into the other exactly. */
+.page-proportions {
+	aspect-ratio: 3 / 4.1;
+}
+
+/* ——— Leather (cover and open-book binding) ————————————————— */
+.leather {
+	background-color: var(--leather);
+	background-image:
+		radial-gradient(ellipse at 35% 25%, rgba(255, 220, 170, 0.12), transparent 60%),
+		url('../assets/textures/leather.svg'),
+		linear-gradient(160deg, var(--leather), var(--leather-2));
+	box-shadow:
+		inset 0 0 0 1px rgba(255, 220, 160, 0.08),
+		inset 0 0 40px rgba(0, 0, 0, 0.55),
+		0 24px 60px rgba(0, 0, 0, 0.6);
+}

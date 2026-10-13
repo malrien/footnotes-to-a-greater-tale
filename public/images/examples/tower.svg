@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+  <defs>
+    <filter id="lapis">
+      <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="2" seed="9"/>
+      <feDisplacementMap in="SourceGraphic" scale="2.2"/>
+    </filter>
+  </defs>
+  <rect width="300" height="300" fill="#fff"/>
+  <g fill="none" stroke="#222" stroke-linecap="round" stroke-linejoin="round" filter="url(#lapis)">
+    <path d="M120 270 L126 110 L174 110 L180 270" stroke-width="2"/>
+    <path d="M116 110 H184 L150 40 Z" stroke-width="2"/>
+    <path d="M150 40 V22 M150 22 L166 28 L150 33" stroke-width="1.5"/>
+    <path d="M141 150 q9 -12 18 0 v22 h-18z M137 210 q13 -14 26 0 v60" stroke-width="1.6"/>
+    <path d="M116 110 v-10 h10 v10 M134 110 v-10 h10 v10 M156 110 v-10 h10 v10 M174 110 v-10 h10 v10" stroke-width="1.4"/>
+    <g stroke-width="0.8" opacity="0.7">
+      <path d="M128 120 l-2 30 M132 125 l-2 34 M168 118 l2 40 M172 124 l3 50 M128 190 l-2 40 M174 200 l2 50"/>
+      <path d="M140 60 l-10 30 M145 55 l-12 40 M160 70 l8 22"/>
+    </g>
+    <path d="M40 272 Q100 262 150 270 T270 268" stroke-width="1.4"/>
+    <path d="M60 272 q10 -30 20 0 M220 270 q14 -40 28 0 M232 270 v-10" stroke-width="1.2"/>
+    <path d="M200 60 q10 -6 20 0 q8 -5 16 0 M60 80 q8 -5 16 0" stroke-width="1"/>
+  </g>
+</svg>

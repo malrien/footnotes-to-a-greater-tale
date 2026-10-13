@@ -1,0 +1,136 @@
+---
+import { getCollection, render } from 'astro:content';
+import BookLayout from '../layouts/BookLayout.astro';
+import Sheet from '../components/Sheet.astro';
+import Ornament from '../components/Ornament.astro';
+import Photo from '../components/pasted/Photo.astro';
+import Sketch from '../components/pasted/Sketch.astro';
+import { pasted } from '../components/pasted';
+import { initialOf } from '../lib/book';
+
+const [profile] = await getCollection('profile');
+if (!profile) throw new Error('Create src/content/profile/<name>.mdx with the character profile.');
+const { name, title, portrait, portrait_style, portrait_paper, portrait_caption, fields } = profile.data;
+const { Content } = await render(profile);
+const hasFields = Object.keys(fields).length > 0;
+---
+
+<BookLayout title={name}>
+	<Sheet width="wide">
+		<p class="kicker">The author's record</p>
+		<h1 class="page-title">{name}</h1>
+		{title && <p class="subtitle">{title}</p>}
+		<Ornament />
+
+		<div class:list={['profile', { 'has-sketch': portrait && portrait_style === 'sketch', 'portrait-only': !hasFields }]}>
+			{
+				portrait && (
+					<div class="portrait">
+						{portrait_style === 'sketch' ? (
+							<Sketch src={portrait} caption={portrait_caption} alt={`A drawing of ${name}`} position="center" width="100%" paper={portrait_paper} />
+						) : (
+							<Photo src={portrait} caption={portrait_caption} alt={`Portrait of ${name}`} tape="album" position="center" width="100%" tilt={-1.5} />
+						)}
+					</div>
+				)
+			}
+			{
+				hasFields && (
+					<dl class="fields">
+						{Object.entries(fields).map(([label, value]) => (
+							<div class="field">
+								<dt>{label}</dt>
+								<dd>{value}</dd>
+							</div>
+						))}
+					</dl>
+				)
+			}
+		</div>
+
+		<div class="prose dropcap body" data-initial={initialOf(profile.body)}>
+			<Content components={pasted} />
+		</div>
+	</Sheet>
+</BookLayout>
+
+<style>
+	.profile {
+		display: grid;
+		grid-template-columns: minmax(0, 17rem) 1fr;
+		gap: 2.5rem;
+		align-items: start;
+		margin: 1.5rem 0 2.5rem;
+	}
+
+	.profile:not(:has(.portrait)) {
+		grid-template-columns: 1fr;
+	}
+
+	/* A drawing on the page wants more room than a pasted photo */
+	.profile.has-sketch {
+		grid-template-columns: minmax(0, 25rem) 1fr;
+		gap: 2rem;
+		align-items: center;
+	}
+
+	/* No fields: the portrait alone, centred on the page */
+	.profile.portrait-only {
+		grid-template-columns: minmax(0, 17rem);
+		justify-content: center;
+	}
+
+	.profile.portrait-only.has-sketch {
+		grid-template-columns: minmax(0, 26rem);
+	}
+
+	.fields {
+		margin: 0;
+		font-size: 1.1rem;
+	}
+
+	.field {
+		display: flex;
+		align-items: baseline;
+		gap: 0.8rem;
+		padding: 0.45rem 0;
+		border-bottom: 1px dashed color-mix(in srgb, var(--ink) 25%, transparent);
+	}
+
+	dt {
+		flex: 0 0 9rem;
+		font-family: var(--f-smallcaps);
+		color: var(--rubric);
+		letter-spacing: 0.05em;
+	}
+
+	dd {
+		margin: 0;
+		font-family: var(--f-hand);
+		font-size: 0.85em;
+		line-height: 1.6;
+		color: var(--ink);
+	}
+
+	.body {
+		clear: both;
+	}
+
+	@media (max-width: 720px) {
+		.profile,
+		.profile.has-sketch {
+			grid-template-columns: 1fr;
+			gap: 1.5rem;
+		}
+		.portrait {
+			width: min(15rem, 80%);
+			margin: 0 auto;
+		}
+		.has-sketch .portrait {
+			width: min(22rem, 95%);
+		}
+		dt {
+			flex-basis: 7rem;
+		}
+	}
+</style>

@@ -1,0 +1,351 @@
+---
+import '../styles/base.css';
+import '../styles/paper.css';
+import '../styles/typography.css';
+import '../styles/pasted.css';
+import { Font } from 'astro:assets';
+import { url } from '../lib/book';
+
+interface Props {
+	title?: string;
+	description?: string;
+	/** Hides the bookmark bar (used on the cover). */
+	noNav?: boolean;
+}
+
+const BOOK_TITLE = 'Footnotes to a Greater Tale';
+const {
+	title,
+	description = 'Footnotes to a Greater Tale: the chronicle of Malrien Vealwood, written in his own hand.',
+	noNav = false,
+} = Astro.props;
+const fullTitle = title ? `${title} · ${BOOK_TITLE}` : BOOK_TITLE;
+
+const bookmarks = [
+	{ href: '/contents', label: 'Contents' },
+	{ href: '/profile', label: 'Profile' },
+	{ href: '/characters', label: 'Characters' },
+	{ href: '/notes', label: 'Notes & Letters' },
+	{ href: '/glossary', label: 'Glossary' },
+];
+const current = Astro.url.pathname.replace(import.meta.env.BASE_URL.replace(/\/$/, ''), '');
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="description" content={description} />
+		<link rel="icon" type="image/svg+xml" href={url('/favicon.svg')} />
+		<title>{fullTitle}</title>
+		<!-- Self-hosted fonts (see `fonts` in astro.config.mjs). The ones seen at
+		     first glance are preloaded so they're ready before the first paint. -->
+		<Font cssVariable="--font-cinzel-decorative" preload />
+		<Font cssVariable="--font-fell" preload={[{ style: 'normal' }]} />
+		<Font cssVariable="--font-fell-sc" />
+		<Font cssVariable="--font-hand" />
+		<Font cssVariable="--font-signature" />
+		<script is:inline>
+			// Apply theme and reading mode before first paint, so nothing flickers.
+			try {
+				const t = localStorage.getItem('theme');
+				if (t) document.documentElement.dataset.theme = t;
+				const m = localStorage.getItem('reading-mode');
+				if (m) document.documentElement.dataset.reading = m;
+			} catch {}
+		</script>
+		<slot name="head" />
+		{
+			!noNav && (
+				<script is:inline define:vars={{ coverPath: url('/') }}>
+					// Leaving for the cover: this page's sheet shrinks back into the book there,
+					// then the cover closes (see src/pages/index.astro).
+					addEventListener('pageswap', (e) => {
+						const to = e.activation?.entry?.url;
+						if (!e.viewTransition || !to) return;
+						e.viewTransition.ready.catch(() => {}); // skipped transitions reject this; that's fine
+						const trim = (p) => p.replace(/\/$/, '');
+						if (trim(new URL(to).pathname) !== trim(coverPath)) return;
+						const sheet = document.querySelector('[data-sheet]');
+						if (!sheet) return;
+						// Very tall sheets (long chapters) would fly in from off-screen: those just fade.
+						const r = sheet.getBoundingClientRect();
+						if (r.height > innerHeight * 1.6 || r.bottom < 0 || r.top > innerHeight) return;
+						sheet.style.viewTransitionName = 'book-page';
+					});
+				</script>
+			)
+		}
+	</head>
+	<body>
+		<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+			<!-- Sketch: alpha = how dark the pixel is; colour = ink -->
+			<filter id="sketch-ink" color-interpolation-filters="sRGB">
+				<feColorMatrix values="0 0 0 0 0.2  0 0 0 0 0.13  0 0 0 0 0.07  -0.34 -0.33 -0.33 1 0" />
+			</filter>
+		</svg>
+		{
+			!noNav && (
+				<header class="bookmarks">
+					<a class="wordmark" href={url('/')} aria-label="Back to the cover">
+						<span aria-hidden="true">❧</span> {BOOK_TITLE}
+					</a>
+					<nav aria-label="Book sections">
+						<ul>
+							{bookmarks.map((b) => (
+								<li>
+									<a href={url(b.href)} aria-current={current.startsWith(b.href) ? 'page' : undefined}>
+										{b.label}
+									</a>
+								</li>
+							))}
+						</ul>
+					</nav>
+					<button class="candle" type="button" aria-label="Toggle candlelight" title="Candlelight">
+						<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+							<path class="flame" d="M12 2c1.8 2.3 2.6 3.9 2.6 5.2A2.6 2.6 0 0 1 12 9.8a2.6 2.6 0 0 1-2.6-2.6C9.4 5.9 10.2 4.3 12 2Z" />
+							<rect x="9" y="11" width="6" height="9" rx="1" />
+							<path d="M6 21h12" stroke-width="1.6" stroke-linecap="round" />
+						</svg>
+					</button>
+				</header>
+			)
+		}
+
+		<main>
+			<slot />
+		</main>
+
+		{
+			!noNav && (
+				<div class="page-jump">
+					<button class="jump" type="button" data-jump="top" aria-label="To the top of the page" title="To the top">
+						<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+							<path d="M6 14l6-6 6 6" />
+						</svg>
+					</button>
+					<button class="jump" type="button" data-jump="end" aria-label="To the end of the page" title="To the end">
+						<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+							<path d="M6 10l6 6 6-6" />
+						</svg>
+					</button>
+				</div>
+			)
+		}
+
+		<script is:inline>
+			// Chrome sizes a drop cap wrongly (too big) on a paragraph's first layout;
+			// force the second, correct one before the first paint (see settleDropcaps
+			// in src/scripts/book-mode.ts).
+			document.querySelectorAll('.dropcap > p:first-of-type').forEach((p) => {
+				void p.offsetWidth;
+				p.style.wordSpacing = '0.01px';
+				void p.offsetWidth;
+				p.style.wordSpacing = '';
+			});
+		</script>
+
+		<script>
+			const button = document.querySelector<HTMLButtonElement>('.candle');
+			button?.addEventListener('click', () => {
+				const root = document.documentElement;
+				const darkNow =
+					root.dataset.theme === 'dark' ||
+					(!root.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches);
+				const next = darkNow ? 'light' : 'dark';
+				root.dataset.theme = next;
+				try {
+					localStorage.setItem('theme', next);
+				} catch {}
+			});
+
+			// On long pages (scroll mode), buttons to jump to the top or the end.
+			// Each shows only when there's a good stretch to travel that way.
+			const jumps = document.querySelectorAll<HTMLButtonElement>('.jump');
+			if (jumps.length) {
+				const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+				const update = () => {
+					const root = document.documentElement;
+					const room = innerHeight * 0.5;
+					const long = root.scrollHeight > innerHeight * 2;
+					jumps.forEach((b) => {
+						const show =
+							long &&
+							(b.dataset.jump === 'top'
+								? scrollY > room
+								: scrollY + innerHeight < root.scrollHeight - room);
+						b.classList.toggle('shown', show);
+					});
+				};
+				// Scroll events already come at most once per frame
+				addEventListener('scroll', update, { passive: true });
+				addEventListener('resize', update);
+				// The page's height changes with the reading mode, images, fonts…
+				new ResizeObserver(update).observe(document.body);
+				jumps.forEach((b) =>
+					b.addEventListener('click', () => {
+						const top = b.dataset.jump === 'top' ? 0 : document.documentElement.scrollHeight;
+						scrollTo({ top, behavior: reducedMotion.matches ? 'auto' : 'smooth' });
+					}),
+				);
+				update();
+			}
+		</script>
+	</body>
+</html>
+
+<style>
+	main {
+		padding: 0 16px 4rem;
+	}
+
+	.bookmarks {
+		display: flex;
+		align-items: center;
+		gap: 1rem 1.5rem;
+		flex-wrap: wrap;
+		justify-content: space-between;
+		max-width: 1140px;
+		margin: 0 auto;
+		padding: 1rem 16px 1.6rem;
+		font-family: var(--f-smallcaps);
+		letter-spacing: 0.06em;
+	}
+
+	.wordmark {
+		font-family: var(--f-title);
+		font-size: 1.05rem;
+		color: var(--gold-light);
+		text-decoration: none;
+		text-shadow: 0 1px 0 rgba(0, 0, 0, 0.6);
+	}
+
+	nav ul {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.2rem 1.3rem;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	nav a {
+		color: var(--gold-light);
+		text-decoration: none;
+		opacity: 0.8;
+		padding: 0.2em 0;
+		border-bottom: 1px solid transparent;
+		transition: opacity 0.2s, border-color 0.2s;
+	}
+
+	nav a:hover,
+	nav a[aria-current='page'] {
+		opacity: 1;
+		border-bottom-color: var(--gold);
+	}
+
+	.candle {
+		background: none;
+		border: 1px solid color-mix(in srgb, var(--gold) 50%, transparent);
+		border-radius: 999px;
+		padding: 0.35rem 0.5rem;
+		cursor: pointer;
+		color: var(--gold-light);
+		line-height: 0;
+	}
+
+	.candle svg {
+		fill: currentColor;
+		stroke: currentColor;
+	}
+
+	.candle .flame {
+		fill: #f3b04a;
+		stroke: none;
+		transform-origin: 12px 9px;
+		animation: flicker 2.4s ease-in-out infinite;
+	}
+
+	@keyframes flicker {
+		0%, 100% { transform: scale(1) rotate(0); }
+		30% { transform: scale(1.06, 0.95) rotate(-3deg); }
+		60% { transform: scale(0.96, 1.05) rotate(2deg); }
+	}
+
+	/* Top / end buttons: small leather studs with a gold rim, like the candle */
+	.page-jump {
+		position: fixed;
+		right: max(16px, env(safe-area-inset-right));
+		bottom: max(1.2rem, env(safe-area-inset-bottom));
+		z-index: 50;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		pointer-events: none;
+	}
+
+	.jump {
+		display: grid;
+		place-items: center;
+		width: 2.6rem;
+		height: 2.6rem;
+		padding: 0;
+		border: 1px solid color-mix(in srgb, var(--gold) 60%, transparent);
+		border-radius: 999px;
+		background: radial-gradient(circle at 35% 30%, var(--leather), var(--leather-2));
+		color: var(--gold-light);
+		box-shadow: 0 4px 10px var(--shadow);
+		cursor: pointer;
+		opacity: 0;
+		visibility: hidden;
+		transform: translateY(0.4rem);
+		transition: opacity 0.25s, transform 0.25s, visibility 0s 0.25s, border-color 0.2s;
+	}
+
+	.jump.shown {
+		opacity: 0.85;
+		visibility: visible;
+		transform: none;
+		pointer-events: auto;
+		transition: opacity 0.25s, transform 0.25s, visibility 0s, border-color 0.2s;
+	}
+
+	.jump.shown:hover {
+		opacity: 1;
+		border-color: var(--gold);
+	}
+
+	.jump svg {
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	@media (max-width: 640px) {
+		.jump {
+			width: 2.3rem;
+			height: 2.3rem;
+		}
+	}
+
+	@media (max-width: 640px) {
+		.bookmarks {
+			justify-content: center;
+			text-align: center;
+			gap: 0.5rem 1rem;
+			padding: 0.8rem 16px 1.1rem;
+		}
+		nav {
+			order: 3;
+			flex-basis: 100%;
+		}
+		nav ul {
+			justify-content: center;
+			gap: 0.1rem 1rem;
+			font-size: 0.92rem;
+		}
+	}
+</style>

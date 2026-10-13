@@ -1,0 +1,53 @@
+---
+import { render } from 'astro:content';
+import BookLayout from '../../layouts/BookLayout.astro';
+import Sheet from '../../components/Sheet.astro';
+import Ornament from '../../components/Ornament.astro';
+import Photo from '../../components/pasted/Photo.astro';
+import Sketch from '../../components/pasted/Sketch.astro';
+import { pasted } from '../../components/pasted';
+import { published, url, initialOf } from '../../lib/book';
+
+export async function getStaticPaths() {
+	const characters = await published('characters');
+	return characters.map((character) => ({ params: { slug: character.id }, props: { character } }));
+}
+
+const { character } = Astro.props;
+const { name, epithet, relation, portrait, portrait_style, portrait_paper } = character.data;
+const { Content } = await render(character);
+---
+
+<BookLayout title={name}>
+	<Sheet>
+		{relation && <p class="kicker">{relation}</p>}
+		<h1 class="page-title">{name}</h1>
+		{epithet && <p class="subtitle">{epithet}</p>}
+		<Ornament />
+		<div class="prose dropcap" data-initial={initialOf(character.body)}>
+			{portrait && portrait_style === 'sketch' && (
+				<Sketch src={portrait} alt={`A drawing of ${name}`} position="right" width={44} paper={portrait_paper} />
+			)}
+			{portrait && portrait_style !== 'sketch' && (
+				<Photo src={portrait} alt={`Portrait of ${name}`} position="right" width={38} />
+			)}
+			<Content components={pasted} />
+		</div>
+		<p class="back"><a href={url('/characters')}>‹ Back to the Dramatis Personae</a></p>
+	</Sheet>
+</BookLayout>
+
+<style>
+	.back {
+		clear: both;
+		margin: 3rem 0 0;
+		text-align: center;
+		font-family: var(--f-smallcaps);
+		letter-spacing: 0.08em;
+	}
+
+	/* the portrait comes before the text; the drop cap goes on the first paragraph */
+	.prose :global(.pasted:first-child) {
+		margin-top: 0;
+	}
+</style>

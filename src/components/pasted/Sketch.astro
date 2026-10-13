@@ -1,0 +1,21 @@
+---
+import { styleVars, assetUrl, type Position } from './util';
+
+interface Props {
+	src: string;
+	caption?: string;
+	alt?: string;
+	tilt?: number;
+	position?: Position;
+	width?: string | number;
+	/** The paper the drawing was made on: white (default) or tinted/parchment. */
+	paper?: 'white' | 'tinted';
+}
+
+const { src, caption, alt, tilt = 0, position = 'center', width = 70, paper = 'white' } = Astro.props;
+---
+
+<figure class:list={['pasted', 'sketch', `pos-${position}`, `paper-${paper}`]} style={styleVars(tilt, width)}>
+	<img src={assetUrl(src)} alt={alt ?? caption ?? ''} loading="lazy" decoding="async" />
+	{caption && <figcaption class="hand-caption">{caption}</figcaption>}
+</figure>

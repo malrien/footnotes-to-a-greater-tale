@@ -1,0 +1,81 @@
+<div class="reading-toggle" role="group" aria-label="Reading mode">
+	<button type="button" data-mode="scroll" aria-pressed="true">
+		<svg viewBox="0 0 24 24" aria-hidden="true">
+			<path d="M6 4h11a2 2 0 0 1 2 2v12a2 2 0 0 0 2 2H9a2 2 0 0 1-2-2V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2v1h4" />
+			<path d="M10 9h6M10 12h6M10 15h4" />
+		</svg>
+		Scroll
+	</button>
+	<button type="button" data-mode="book" aria-pressed="false">
+		<svg viewBox="0 0 24 24" aria-hidden="true">
+			<path d="M12 6c-2-1.5-5-2-8-1.5V19c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5V4.5c-3-.5-6 0-8 1.5Z" />
+			<path d="M12 6v14.5" />
+		</svg>
+		Book
+	</button>
+</div>
+
+<script>
+	import { setMode, currentMode } from '../scripts/book-mode';
+
+	const buttons = document.querySelectorAll<HTMLButtonElement>('.reading-toggle button');
+	const sync = () => {
+		const mode = currentMode();
+		buttons.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === mode)));
+	};
+	buttons.forEach((b) =>
+		b.addEventListener('click', () => {
+			setMode(b.dataset.mode === 'book' ? 'book' : 'scroll');
+			sync();
+		}),
+	);
+	sync();
+</script>
+
+<style>
+	.reading-toggle {
+		display: inline-flex;
+		padding: 3px;
+		gap: 2px;
+		border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent);
+		border-radius: 999px;
+		background: rgba(0, 0, 0, 0.25);
+	}
+
+	button {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		padding: 0.4rem 1rem;
+		border: 0;
+		border-radius: 999px;
+		background: transparent;
+		color: var(--gold-light);
+		font-family: var(--f-smallcaps);
+		font-size: 0.95rem;
+		letter-spacing: 0.08em;
+		cursor: pointer;
+		opacity: 0.7;
+		transition: background 0.2s, opacity 0.2s, color 0.2s;
+	}
+
+	button:hover {
+		opacity: 1;
+	}
+
+	button[aria-pressed='true'] {
+		opacity: 1;
+		background: var(--gold);
+		color: var(--leather-2);
+	}
+
+	svg {
+		width: 1.1rem;
+		height: 1.1rem;
+		fill: none;
+		stroke: currentColor;
+		stroke-width: 1.6;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+</style>

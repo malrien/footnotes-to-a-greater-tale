@@ -1,0 +1,25 @@
+---
+import { styleVars, tiltFrom, type Position } from './util';
+
+interface Props {
+	tilt?: number;
+	position?: Position;
+	color?: 'cream' | 'yellow' | 'blue';
+	width?: string | number;
+	/** Tape holding the note down (default: yes). */
+	tape?: boolean;
+}
+
+const { position = 'right', color = 'cream', width, tape = true } = Astro.props;
+const text = await Astro.slots.render('default');
+const tilt = Astro.props.tilt ?? tiltFrom(text, 4);
+---
+
+<aside
+	class:list={['pasted', 'note', `pos-${position}`, `color-${color}`, { 'tape-top': tape }]}
+	style={styleVars(tilt, width)}
+>
+	<div class="note-shadow">
+		<div class="note-paper" set:html={text} />
+	</div>
+</aside>
